@@ -1,0 +1,50 @@
+.author-bio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.author-name {
+  font-family: "DejaVu Sans";
+  font-weight: 700;
+}
+
+.author-avatar {
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  margin-right: 1rem;
+}
+
+.author-credentials {
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-info h3 {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.author-links {
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+}
+
+.author-links a {
+  color: #0077cc;
+}
+
+.author-links a img {
+  width: 32px;
+  height: 32px;
+}

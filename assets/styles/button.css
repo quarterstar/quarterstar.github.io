@@ -1,0 +1,173 @@
+:root{
+  --btn-bg: #000;
+  --border-color: #fff;
+  --btn-radius: 12px;
+  --text-color: #fff;
+
+  /* Timings (adjust as you like) */
+  --draw-duration: 3s;      /* total time allocated to draw all four sides */
+  --step: calc(var(--draw-duration) / 4); /* per-side draw time (auto) */
+  --thicken-duration: 4s;   /* how long the "thicken" animation runs after each side finishes */
+  --initial-thickness: 2px; /* visual starting border thickness */
+  --thicken-multiplier: 3;  /* how many times thicker the border ends up */
+}
+
+/* Base button */
+.fancy-btn{
+  --border-thickness: var(--initial-thickness);
+  position: relative;
+  display:inline-block;
+  padding: .75rem 1.6rem;
+  background: var(--btn-bg);
+  color: var(--text-color);
+  font-weight: 700;
+  font-family: "DejaVu Sans"
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  overflow: hidden;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,.45);
+}
+.fancy-btn:active { transform: translateY(1px); }
+
+/* Keyboard focus */
+.fancy-btn:focus{
+  outline: none;
+  box-shadow: 0 6px 28px rgba(0,0,0,.6), 0 0 0 4px rgba(255,255,255,0.06);
+}
+
+/* Four border bars (top/right/bottom/left) */
+.fancy-btn .border{
+  position: absolute;
+  background: var(--border-color);
+  pointer-events: none;
+  z-index: 2;
+  transform-origin: center;
+  /* ensure transforms don't blur text */
+  backface-visibility: hidden;
+  will-change: width, height, transform;
+}
+
+/* top (horizontal) */
+.fancy-btn .border.top{
+  top: 0;
+  left: 0;
+  height: var(--initial-thickness);
+  width: 0;
+  transform: scaleY(1);
+  transition: width var(--step) linear;
+  transition-delay: 0s;
+  animation: thickenHorizontal var(--thicken-duration) forwards;
+  animation-delay: calc(var(--step) * 1); /* start thickening after this side finishes */
+  animation-play-state: paused;
+}
+
+/* right (vertical) */
+.fancy-btn .border.right{
+  right: 0;
+  top: 0;
+  width: var(--initial-thickness);
+  height: 0;
+  transform: scaleX(1);
+  transition: height var(--step) linear;
+  transition-delay: var(--step);
+  animation: thickenVertical var(--thicken-duration) forwards;
+  animation-delay: calc(var(--step) * 2);
+  animation-play-state: paused;
+}
+
+/* bottom (horizontal) */
+.fancy-btn .border.bottom{
+  bottom: 0;
+  right: 0;
+  height: var(--initial-thickness);
+  width: 0;
+  transform: scaleY(1);
+  transition: width var(--step) linear;
+  transition-delay: calc(var(--step) * 2);
+  animation: thickenHorizontal var(--thicken-duration) forwards;
+  animation-delay: calc(var(--step) * 3);
+  animation-play-state: paused;
+}
+
+/* left (vertical) */
+.fancy-btn .border.left{
+  left: 0;
+  bottom: 0;
+  width: var(--initial-thickness);
+  height: 0;
+  transform: scaleX(1);
+  transition: height var(--step) linear;
+  transition-delay: calc(var(--step) * 3);
+  animation: thickenVertical var(--thicken-duration) forwards;
+  animation-delay: calc(var(--step) * 4); /* starts after full drawing completes */
+  animation-play-state: paused;
+}
+
+/* Hover/focus state: start drawing + start animations */
+.fancy-btn:hover,
+.fancy-btn:focus-visible{
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+}
+
+.fancy-btn:hover .border.top,
+.fancy-btn:focus-visible .border.top{
+  width: 100%;
+  animation-play-state: running;
+}
+.fancy-btn:hover .border.right,
+.fancy-btn:focus-visible .border.right{
+  height: 100%;
+  animation-play-state: running;
+}
+.fancy-btn:hover .border.bottom,
+.fancy-btn:focus-visible .border.bottom{
+  width: 100%;
+  animation-play-state: running;
+}
+.fancy-btn:hover .border.left,
+.fancy-btn:focus-visible .border.left{
+  height: 100%;
+  animation-play-state: running;
+}
+
+/* The "thicken" animations (they run once and fill forwards for a progressive effect) */
+@keyframes thickenHorizontal{
+  0% { transform: scaleY(1); }
+  100% { transform: scaleY(var(--thicken-multiplier)); }
+}
+@keyframes thickenVertical{
+  0% { transform: scaleX(1); }
+  100% { transform: scaleX(var(--thicken-multiplier)); }
+}
+
+/* Make sure the borders keep rounded corners visually */
+.fancy-btn .border.top,
+.fancy-btn .border.bottom{
+  border-radius: calc(var(--btn-radius) * 0.8);
+}
+.fancy-btn .border.left,
+.fancy-btn .border.right{
+  border-radius: calc(var(--btn-radius) * 0.8);
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce){
+  .fancy-btn, .fancy-btn .border {
+    transition: none !important;
+    animation: none !important;
+  }
+  .fancy-btn .border.top,
+  .fancy-btn .border.right,
+  .fancy-btn .border.bottom,
+  .fancy-btn .border.left {
+    width: 100%;
+    height: 100%;
+    transform: none;
+  }
+}
