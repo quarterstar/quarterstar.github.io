@@ -1,0 +1,60 @@
+/* callout base */
+.callout {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1.25rem 0;
+  display: flex;
+  background: var(--callout-bg, #f8fafb);
+  border-left: 4px solid var(--callout-border, #bfe3ff);
+  color: var(--callout-color, #0b2540);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* tip variant */
+.callout--tip {
+  --callout-bg: #f0f9f4;
+  --callout-border: #2fa66b;
+  --callout-color: #07391f;
+}
+
+html.dark-mode .callout--tip {
+  --callout-bg: #267c4a;       /* darker background */
+  --callout-border: #58d68d;   /* brighter green for contrast */
+  --callout-color: #d4f5e1;    /* light text color */
+}
+
+/* info / warning examples */
+.callout--info {
+  --callout-bg: #f3f7ff;
+  --callout-border: #4b7ed6;
+  --callout-color: #07224a;
+}
+.callout--warning {
+  --callout-bg: #fff8f0;
+  --callout-border: #ffb84d;
+  --callout-color: #4a2b00;
+}
+
+/* small caption/title inside */
+.callout strong {
+  display: flex;
+  margin-bottom: 0.35rem;
+}
+
+.callout-header {
+  display: flex;
+  flex-direction: row;
+  gap: 0.2rem;
+}
+
+/* accessible focus styling (in case callouts are focusable links) */
+.callout:focus-within {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06), 0 0 0 6px rgba(8, 68, 255, 0.06);
+}
+
+.callout__title {
+  margin: 0;               /* remove default margins */
+}
+.callout__icon {          /* tweak icon size/alignment */
+}

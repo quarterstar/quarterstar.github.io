@@ -1,0 +1,33 @@
+:root {
+  --dropcap-color: #222;
+}
+
+html.dark-mode {
+  --dropcap-color: #e2e2e2;
+}
+
+article > p:first-of-type::first-letter  {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: clamp(2.2rem, 6vw, 4.4rem);
+  font-weight: 700;
+
+  float: left;
+  font-size: 6rem;
+  line-height: 0.65;
+  margin: 0.1em 0.1em 0.1em 0;
+
+  color: var(--dropcap-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* https://www.scottohara.me/blog/2017/04/14/inclusively-hidden.html */
+.sr-only:not(:focus):not(:active) {
+  clip: rect(0 0 0 0); 
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap; 
+  width: 1px;
+}

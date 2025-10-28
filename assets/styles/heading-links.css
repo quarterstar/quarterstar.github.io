@@ -1,0 +1,97 @@
+/* Heading link (chain icon) + "Copied!" feedback */
+article .heading-anchor {
+  position: relative; /* to scope absolute children if needed */
+}
+
+/* The icon/button that sits next to the heading */
+.heading-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-left: .45rem;
+  margin-right: -0.25rem; /* visually tuck a bit */
+  color: currentColor;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(-1px); /* small vertical align tweak */
+  transition: opacity 160ms ease;
+  vertical-align: middle;
+}
+
+/* Reveal the icon when heading is hovered, focused or the link itself is focused */
+article h2:hover .heading-link,
+article h3:hover .heading-link,
+article h4:hover .heading-link,
+article h5:hover .heading-link,
+article h6:hover .heading-link,
+.heading-link:focus:not(span) {
+  opacity: 0.5;
+}
+.heading-link:focus span {
+  opacity: 1;
+}
+
+/* Make it keyboard focusable and visible */
+.heading-link:focus {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}
+
+/* Slight hover effect */
+.heading-link:hover svg,
+.heading-link:focus svg {
+  transform: translateY(-1px) scale(1.02);
+  transition: transform 120ms;
+}
+
+/* Tooltip / "Copied!" bubble */
+.heading-link .copy-feedback {
+  position: absolute;
+  top: -2.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.35rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+  transform-origin: bottom center;
+  z-index: 10;
+}
+
+/* show feedback */
+.heading-link.copied .copy-feedback {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* small caret pointing down (optional) */
+.heading-link .copy-feedback::after{
+  content: "";
+  position:absolute;
+  left: 50%;
+  bottom: -5px;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0 5px;
+  border-style: solid;
+  border-color: #111 transparent transparent transparent;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .heading-link, .heading-link .copy-feedback {
+    transition: none !important;
+  }
+}
+
+/* for touch screens always show */
+@media (hover: none) and (pointer: coarse) {
+  .heading-link span a { opacity: 0.5; }
+}
+
