@@ -1,0 +1,126 @@
+:root {
+  --separator-color: #eee;
+  --subscribe-form-bg-color: #e5e5e5;
+  --subscribe-form-input-color: #d2d3d1;
+}
+
+html.dark-mode {
+  --separator-color: #444444;
+  --subscribe-form-bg-color: #0f0f0f;
+  --subscribe-form-input-color: #161616;
+}
+
+.heading-link {
+  display: inline-block;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  text-decoration: none;
+  color: #999;
+}
+
+h1:hover .heading-link,
+h2:hover .heading-link,
+h3:hover .heading-link,
+h4:hover .heading-link,
+h5:hover .heading-link,
+h6:hover .heading-link {
+  opacity: 1;
+}
+
+.heading-link:hover {
+  color: #333;
+}
+
+/* create a line below */
+.article-header {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.tip-of-day {
+  font-family: 'Cursive', 'Brush Script MT', 'Lucida Handwriting', 'Comic Sans MS', cursive;
+}
+
+* {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.copy-code-pre, .copy-code-pre code {
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  -moz-hyphens: none !important;
+  -ms-hyphens: none !important;
+  overflow-wrap: normal !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  white-space: pre !important; /* keeps whitespace and prevents wrapping */
+}
+
+#newsletter-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#newsletter {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+}
+
+#newsletter-success {
+  display: none;
+}
+
+#subscribe-form {
+  color: #fff;
+  background-color: var(--subscribe-form-bg-color) !important;
+  padding: 1rem;
+  align-self: center;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+#subscribe-form input {
+  align-self: center;
+  background: transparent;
+  background-color: var(--subscribe-form-input-color);
+  border-radius: 20px;
+  padding: 10px;
+  outline: none;
+  border: none;
+}
+
+#newsletter form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#newsletter button {
+  align-self: center;
+}
+
+.separator {
+  border-top: 1px solid var(--separator-color);
+  margin-top: 2rem;
+  padding-top: 1rem;
+}
+
+.separator-down {
+  border-bottom: 1px solid var(--separator-color);
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+}

@@ -1,0 +1,96 @@
+/* Critical variables + tiny reset */
+:root{
+  --bg: #ffffff;
+  --text: #000000;
+  --anti-text: #ffffff;
+  --muted: #6b7280;
+  --accent: #1f6feb;
+  --card: #ffffff;
+  --border: #e6e9ee;
+  --selectable-box-hover-color: #e2e2e2;
+}
+html.dark-mode {
+  --bg: #191919;
+  --text: #ffffff;
+  --anti-text: #000000;
+  --muted: #9aa6b2;
+  --accent: #58a6ff;
+  --card: #0b1220;
+  --border: rgba(255,255,255,0.08);
+  --code-bg: #262626;
+  --selectable-box-hover-color: #3d3d3d;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+
+html {
+  color-scheme: light dark; scroll-behavior: smooth;
+}
+
+/* lightweight font-family stack (uses fallback system fonts immediately)
+   This prevents FOIT while the webfont downloads. */
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background .18s ease, color .18s ease;
+  font-family: "DejaVu Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  backface-visibility: hidden;
+  min-height: 100vh;
+}
+
+/* Keep layout rules needed immediately */
+img, svg, video {
+  max-width: 100%;
+  display: block;
+}
+
+main {
+  max-width: min(70ch, 100% - 4rem);
+  margin-inline: auto;
+  flex: 1;
+}
+
+/* If your H1/Hero is above the fold and you want Archivo's look immediately,
+   you can leave the fallback here and let the webfont swap in later. */
+h1,h2,h3,h4,h5,h6 {
+  font-family: "Archivo Black", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.2;
+}
+
+/* simple flex container to avoid layout jumps */
+body, main, article, section, .text-container {
+  gap: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+div, section, article, main, nav, header, footer, ul, li {
+  display: flex;
+  flex-direction: column;
+}
+
+ul:not(.no-list-bullet) {
+  padding-left: 1.2rem;
+  list-style-position: outside;
+}
+
+ul:not(.no-list-bullet) li {
+  display: list-item;
+}
+
+.selectable-box {
+  transition: background-color 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.selectable-box:hover {
+  background-color: var(--selectable-box-hover-color);
+}
+
+footer {
+  margin-top: 30px;
+}

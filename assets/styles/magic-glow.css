@@ -1,0 +1,99 @@
+/* CSS - faint multicolored animated glow with a "magic" feel */
+:root{
+  --glow-spread: 28px;        /* how far the glow extends */
+  --glow-blur1: 22px;        /* inner blur */
+  --glow-blur2: 36px;        /* outer blur */
+  --glow-opacity: 0.55;      /* overall glow visibility */
+  --spin-duration: 8s;       /* rotation speed */
+  --pulse-duration: 4.5s;    /* subtle pulse speed */
+}
+
+/*
+ * NOTE: page makes layout elements flex containers so the .magic-glow flex item is being stretched by the parent (align-items: stretch). Fix by preventing the child from stretching or by changing how the pseudo elements size themselves (see the commented elements)
+ * */
+.magic-glow{
+  /* display: inline-flex; /1* size to content *1/ */
+  /* align-self: flex-start; /1* if parent is a column-flex, prevent cross-axis stretch *1/ */
+
+  position:relative;
+  z-index:1;
+  padding:1.2rem 2rem;
+  border-radius:14px;
+  color:var(--text);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
+  font-weight:600;
+  letter-spacing:0.4px;
+  user-select:none;
+  cursor:default;
+  transform: translateZ(0); /* create layer */
+}
+
+/* two layered pseudo-elements produce a soft multicolor halo */
+.magic-glow::before,
+.magic-glow::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%,-50%) rotate(0deg);
+  width: calc(100% + var(--glow-spread));
+  height: calc(100% + var(--glow-spread));
+  border-radius: inherit;
+  pointer-events:none;
+  z-index:-1;
+  mix-blend-mode: screen;
+  opacity: var(--glow-opacity);
+  filter: blur(var(--glow-blur1));
+  background: conic-gradient(
+    from 0deg,
+    #ff6b6b 0deg 72deg,
+    #f5a623 72deg 140deg,
+    #ffd86b 140deg 200deg,
+    #8be9fd 200deg 260deg,
+    #a29bfe 260deg 330deg,
+    #ff6b6b 330deg 360deg
+  );
+  transition: opacity .25s linear;
+  will-change: transform, opacity, filter;
+  animation: spin var(--spin-duration) linear infinite,
+             pulse var(--pulse-duration) ease-in-out infinite;
+}
+
+/* second layer: larger, slower, softer */
+.magic-glow::after{
+  width: calc(100% + calc(var(--glow-spread) * 1.8));
+  height: calc(100% + calc(var(--glow-spread) * 1.8));
+  filter: blur(var(--glow-blur2));
+  opacity: calc(var(--glow-opacity) * 0.75);
+  animation-duration: calc(var(--spin-duration) * 1.6), var(--pulse-duration);
+  animation-direction: reverse, normal;
+  transform-origin: center;
+}
+
+/* keep motion subtle for smaller screens */
+@media (max-width:420px){
+  :root{ --glow-spread: 18px; --glow-blur1:18px; --glow-blur2:28px; --spin-duration:10s; }
+}
+
+/* accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .magic-glow::before,
+  .magic-glow::after{
+    animation: none;
+    opacity: calc(var(--glow-opacity) * 0.7);
+  }
+}
+
+/* keyframes */
+@keyframes spin{
+  from{ transform: translate(-50%,-50%) rotate(0deg); }
+  to{ transform: translate(-50%,-50%) rotate(360deg); }
+}
+@keyframes pulse{
+  0%   { filter: blur(var(--glow-blur1)); opacity: calc(var(--glow-opacity) * 0.75); }
+  50%  { filter: blur(calc(var(--glow-blur1) + 8px)); opacity: calc(var(--glow-opacity) * 1); }
+  100% { filter: blur(var(--glow-blur1)); opacity: calc(var(--glow-opacity) * 0.75); }
+}
+
