@@ -1,0 +1,30 @@
+/* reading-progress (recommended) */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;                /* tweak as needed */
+  background: transparent;
+  z-index: 9999;
+  pointer-events: none;       /* don't block clicks */
+}
+
+/* The actual visible bar uses transform: scaleX for smooth GPU-friendly updates */
+.reading-progress__bar {
+  height: 100%;
+  width: 100%;                /* full width, scaled via transform */
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 200ms ease-out;
+  background: var(--primary-color, #0b74de);
+  box-shadow: 0 0 6px rgba(11,116,222,0.35);
+  will-change: transform;
+}
+
+/* respects user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reading-progress__bar {
+    transition: none;
+  }
+}

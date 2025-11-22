@@ -1,0 +1,649 @@
+
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BPHGGDK0L6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-BPHGGDK0L6');
+</script>
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+
+    <link rel="preload" href="/assets/fonts/DejaVuSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ArchivoBlack-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<link rel="preconnect" href="https://groot.mailerlite.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://utteranc.es" crossorigin>
+<link rel="preconnect" href="https://assets.mlcdn.com" crossorigin>
+
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.">
+    <link rel="canonical" href="https://www.quarterstar.tech/2025/10/26/understanding-the-nix-store-by-hunting-packages-down" />
+    <meta property="og:title" content="">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="">
+
+    <title>Understanding the Nix Store by Hunting Packages Down</title>
+
+    <script>
+  (function() {
+    try {
+      const darkClass = 'dark-mode';
+      const stored = localStorage.getItem('site-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if(stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add(darkClass);
+      }
+    } catch(e) {}
+  })();
+</script>
+
+    <link id="hljs-theme" rel="stylesheet" href="">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" defer></script>
+<script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
+
+    
+    
+
+<link rel="preload" href="/assets/styles/global.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/styles/global.css"></noscript>
+
+    
+
+<link rel="stylesheet" href="/assets/styles/global-defer.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/assets/styles/global-defer.css"></noscript>
+
+
+    
+
+<link rel="preload" href="/assets/styles/navbar.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/styles/navbar.css"></noscript>
+
+    
+
+<link rel="stylesheet" href="/assets/styles/navbar-defer.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/assets/styles/navbar-defer.css"></noscript>
+
+
+    <link rel="stylesheet" href="/assets/styles/theme-toggle.css" />
+    <link rel="stylesheet" href="/assets/styles/button.css" />
+
+    <link rel="stylesheet" href="/assets/styles/article.css" />
+    <link rel="stylesheet" href="/assets/styles/author-bio.css" />
+
+    
+
+    <link rel="stylesheet" href="/assets/styles/copy-code-button.css" />
+    <script src="/assets/scripts/copy-code-button.js" defer></script>
+
+    <link rel="stylesheet" href="/assets/styles/reading-progress.css" />
+    <script src="/assets/scripts/reading-progress.js" defer></script>
+
+    <link rel="stylesheet" href="/assets/styles/drop-cap.css" />
+
+    <link rel="stylesheet" href="/assets/styles/heading-underline.css" />
+
+    <link rel="stylesheet" href="/assets/styles/heading-links.css" />
+    <script src="/assets/scripts/heading-links.js" defer></script>
+
+    <link rel="stylesheet" href="/assets/styles/kramdown.css" />
+
+    <link rel="stylesheet" href="/assets/styles/toc.css" />
+
+    
+
+<link rel="stylesheet" href="/assets/styles/magic-glow.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/assets/styles/magic-glow.css"></noscript>
+
+
+    
+
+
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "url": "https://www.quarterstar.tech",
+  "name": "Quarterstar",
+  "description": "Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research."
+}
+</script>
+
+    <script>
+fetch('/assets/data/tips.json')
+  .then(r => r.json())
+  .then(tips => {
+    // compute day-of-year deterministically in client timezone
+    const d = new Date();
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d - start;
+    const dayOfYear = Math.floor(diff / 86400000);
+    const index = dayOfYear % tips.length;
+    document.getElementById('tip-of-day').textContent =
+      'Tip of the day: ' + tips[index];
+  })
+  .catch(()=> {
+    document.getElementById('tip-of-day').textContent = '';
+  });
+</script>
+
+  </head>
+  <body>
+    <div class="reading-progress" aria-hidden="false">
+  <div id="reading-progress-bar"
+       class="reading-progress__bar"
+       role="progressbar"
+       aria-valuemin="0"
+       aria-valuemax="100"
+       aria-valuenow="0"
+       aria-label="Reading progress">
+  </div>
+</div>
+
+
+    <header class="header">
+  <nav id="desktop-nav" class="desktop-nav">
+    <div class="brand-btns">
+      <a href="https://github.com/quarterstar" class="logo">
+        <img src="/assets/images/icons/quarterstar.svg" style="border-radius: 10px" alt="Quarterstar logo">
+      </a>
+      <div class="brand">
+        <p class="brand-name">Q*</p>
+        <p class="brand-desc">Defending offensively.</p>
+      </div>
+    </div>
+    <div class="pc-buttons">
+      <button id="theme-toggle-pc"
+        role="switch"
+        aria-label="Toggle dark mode"
+        aria-checked="false"
+        title="Toggle dark mode">
+  <span class="track" aria-hidden="true">
+    <span class="knob" aria-hidden="true"></span>
+  </span>
+
+  <!-- visual text (kept simple and flex-based) -->
+  <span class="labels" aria-hidden="true">
+    <span class="label label-off">Off</span>
+    <span class="label label-on">On</span>
+  </span>
+</button>
+
+      <ul class="nav-links">
+        <li><a href="/index">Main</a></li>
+<li><a href="/pages/articles">Articles</a></li>
+<li><a href="/pages/donate">Donate</a></li>
+<li><a href="/pages/legal">Legal</a></li>
+
+      </ul>
+    </div>
+    <div class="mobile-buttons">
+      <button id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6.5c0-.83.67-1.5 1.5-1.5h3c.83 0 1.5.67 1.5 1.5v.8H9v-.8z"
+          fill="var(--toggle-lamp-base)"/>
+    <circle class="bulb" cx="12" cy="11" r="3" fill="var(--toggle-lamp-bulb)"/>
+    <rect x="11" y="14" width="2" height="3" fill="var(--toggle-lamp-base)"/>
+    <rect x="8" y="18" width="8" height="1.2" rx="0.6" fill="var(--toggle-lamp-base)"/>
+  </svg>
+</button>
+
+<script src="/assets/scripts/theme-toggle.js" defer></script>
+
+      <button class="menu-btn" id="menuBtn" aria-controls="navDrawer" aria-expanded="false" aria-label="Open navigation">
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="overlay" id="overlay" tabindex="-1" aria-hidden="true"></div>
+
+<nav id="navDrawer" class="nav-drawer" aria-hidden="true">
+  <button class="drawer-close" id="drawerClose" aria-label="Close navigation">✕</button>
+  <h2 style="margin:6px 0 18px;">Menu</h2>
+  <ul>
+    <li><a href="/index">Main</a></li>
+<li><a href="/pages/articles">Articles</a></li>
+<li><a href="/pages/donate">Donate</a></li>
+<li><a href="/pages/legal">Legal</a></li>
+
+  </ul>
+</nav>
+
+<script>
+  (function(){
+    const btn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('navDrawer');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('drawerClose');
+    const firstLink = () => drawer.querySelector('a');
+
+    function toggle(open){
+      const isOpen = typeof open === 'boolean' ? open : !btn.classList.contains('open');
+      btn.classList.toggle('open', isOpen);
+      drawer.classList.toggle('open', isOpen);
+      overlay.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', String(isOpen));
+      drawer.setAttribute('aria-hidden', String(!isOpen));
+      overlay.setAttribute('aria-hidden', String(!isOpen));
+
+      if(isOpen){
+        // move focus into drawer
+        const f = firstLink();
+        if(f) f.focus();
+        // prevent page scrolling behind drawer
+        document.documentElement.style.overflow = 'hidden';
+      } else {
+        // restore
+        document.documentElement.style.overflow = '';
+        btn.focus();
+      }
+    }
+
+    btn.addEventListener('click', ()=>toggle());
+    overlay.addEventListener('click', ()=>toggle(false));
+    closeBtn.addEventListener('click', ()=>toggle(false));
+
+    // close on Escape
+    document.addEventListener('keydown', e => {
+      if(e.key === 'Escape') toggle(false);
+    });
+
+    // close if a nav link is clicked (common mobile behavior)
+    drawer.addEventListener('click', e => {
+      if(e.target.tagName === 'A') toggle(false);
+    });
+  })();
+</script>
+
+<script>
+  const deferredCss = document.querySelector('link[href="/assets/styles/navbar-defer.css"]');
+
+  deferredCss.onload = () => {
+    fixTextPos();
+  };
+
+  // fallback if already loaded (rare)
+  if (deferredCss.sheet) {
+    fixTextPos();
+  }
+
+  function fixTextPos() {
+    // make sure content is not hidden by nav
+    const nav = document.getElementById('desktop-nav');
+    document.body.style.paddingTop = nav.offsetHeight + 15 + 'px';
+  }
+</script>
+
+
+    <main>
+      <div class="article-header">
+        <h1 class="article-title">Understanding the Nix Store by Hunting Packages Down</h1>
+        <span class="post-date">October 26, 2025</span>
+        <br>
+        <span>Written by Quarterstar</span>
+        <br>
+        
+
+15 minutes to read
+
+        <br>
+
+        <p id="tip-of-day" class="tip-of-day">Loading tip...</p>
+      </div>
+      <article>
+        <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h2"><a href="#prerequisites">Prerequisites</a></li>
+<li class="toc-entry toc-h2"><a href="#scenario-1---finding-a-library">Scenario 1 - Finding a Library</a></li>
+<li class="toc-entry toc-h2"><a href="#scenario-2---understanding-benefits-with-an-example">Scenario 2 - Understanding Benefits with an Example</a></li>
+<li class="toc-entry toc-h2"><a href="#the-why--conclusion">The Why &amp; Conclusion</a></li>
+<li class="toc-entry toc-h2"><a href="#bonus-garbage-collection">Bonus: Garbage Collection</a></li>
+</ul><p>In NixOS, packages installed on the system do not follow the standard Linux filesystem hierarchy. I see this nonstandard approach perplex newcomers who are not familiar with it in a practical way. Thankfully, Nix(OS) provides a set of utilities to traverse its special quirks, in the form of commands. This article focuses on such commands, the motivation behind using them, and how they relate to the Nix store. It also aims to show (partially) why it is designed this way by using concrete examples.</p>
+
+<p>By the end of this, you will know how to effectively navigate the Nix store and understand the underlying principles of its package management system; you will learn the Nix store’s structure, the relationship between derivations and store paths, and how symlinks and profiles work to manage packages.</p>
+
+<p>This is my first blog, so I will keep it concise to get feedback on the pacing, tone, and the content being covered. I hope it’s helpful 🙏</p>
+
+<h2 id="prerequisites">
+<a class="anchor" href="#prerequisites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
+
+<p>Before I begin, a few infamous terms need to be thrown out of the way. A <em>derivation</em> is a build recipe for software. It consists of inputs and outputs. Outputs are what we will later discover to be directly connected to paths in the Nix store (store paths). Store paths are always directories, and they are one kind of object in the Nix store, or a store object. There are other store objects, and in fact derivations are a store object. Store paths are a byproduct of derivations, and they contain the programs that we use.</p>
+
+<p>Normally, for a top-to-bottom approach like this you would start with something everyone is familiar with, such as software applications. Instead, I will take the converse approach to give further motivation for the concepts in this blog.</p>
+
+<h2 id="scenario-1---finding-a-library">
+<a class="anchor" href="#scenario-1---finding-a-library" aria-hidden="true"><span class="octicon octicon-link"></span></a>Scenario 1 - Finding a Library</h2>
+
+<p>For the first scenario, suppose you are a programmer and have installed a library like <code class="language-plaintext highlighter-rouge">glm</code> on your NixOS system, which is a mathematical library for C/C++. If you do not understand what that means, imagine code that exists on your system as a package that you cannot directly run. Since it is not an executable, you cannot simply cheat your way by reading a symlink in your path (though specialized environment variables exist). So unless we want to run <code class="language-plaintext highlighter-rouge">find</code> in <code class="language-plaintext highlighter-rouge">/nix/store</code> and wait until the heat death of the universe for it to finish, and then go through duplicate installations of the library to find the one we are looking for, we need to learn some Nix commands.</p>
+
+<p>First, we need to enter a Nix REPL environment to resolve the package directly. REPL stands for Read-Eval-Print Loop, which is a powerful environment for testing various Nix expressions. We can access it with the primary <code class="language-plaintext highlighter-rouge">nix</code> command.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix repl
+nix-repl&gt; pkgs <span class="o">=</span> import &lt;nixpkgs&gt; <span class="o">{}</span>
+nix-repl&gt; pkgs.glm
+«derivation /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv»
+</code></pre></div></div>
+
+<p>This article assumes a basic familiarity with the Nix language, so a crash course for it will not be interleaved. But as a side note, attributes in Nix are evaluated lazily, so we do not worry about the import taking a long time. This is due to the fact that lazy evaluation guarantees expressions are evaluated only when they are needed—not when they are defined.</p>
+
+<p>The last command yields a path because the interpreter treats it as a special kind of attribute set that was introduced as a derivation. Indeed, we can confirm that by running another command in the environment.</p>
+
+<div class="language-nix highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">nix-repl</span><span class="o">&gt;</span> <span class="nv">lib</span> <span class="o">=</span> <span class="nv">pkgs</span><span class="o">.</span><span class="nv">lib</span>
+<span class="nv">nix-repl</span><span class="o">&gt;</span> <span class="nv">lib</span><span class="o">.</span><span class="nv">attrsets</span><span class="o">.</span><span class="nv">isDerivation</span> <span class="nv">pkgs</span><span class="o">.</span><span class="nv">glm</span>
+<span class="kc">true</span>
+</code></pre></div></div>
+
+<aside class="callout callout--tip" role="note" aria-label="Tip">
+  <div class="callout__inner">
+    <div class="callout-header">
+      <span class="callout__icon" aria-hidden="true">💡</span><strong class="callout__title">Tip</strong>
+</div>
+
+    <div class="callout__content">
+<p>Use <a href="https://noogle.dev/">noogle.dev</a> for looking through <code class="language-plaintext highlighter-rouge">lib</code> and <a href="https://mynixos.com/">mynixos.com</a> for looking through <code class="language-plaintext highlighter-rouge">pkgs</code>.</p>
+</div>
+  </div>
+</aside>
+
+<p>From the penultimate set of commands, we infer that the derivation is located at <code class="language-plaintext highlighter-rouge">/nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv</code>. (Derivations always use the <code class="language-plaintext highlighter-rouge">.drv</code> file extension.)</p>
+
+<p>Every derivation (<code class="language-plaintext highlighter-rouge">.drv</code>) has a set of outputs. When a derivation is realised (i.e. built), these become what we will find out to be <em>store paths</em>.</p>
+
+<p>The next step is finding the actual store path where the library file (<code class="language-plaintext highlighter-rouge">.a</code> or <code class="language-plaintext highlighter-rouge">.so</code>) resides in. We can use the <code class="language-plaintext highlighter-rouge">nix-store</code> command to achieve this.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--query</span> <span class="nt">--outputs</span> /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+/nix/store/gkahdgly8x8z8b6cvgab4gij0niajx7x-glm-1.0.1-doc
+/nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1
+</code></pre></div></div>
+
+<p>The latter is the one we are looking for since the former is documentation. This shows that store paths are blobs in the Nix store where different versions of the same package may exist. It is now trivial to list the <code class="language-plaintext highlighter-rouge">lib</code> directory, which reveals that the library we are searching for is there and is statically-linked.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> /nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1/lib
+libglm.a
+pkgconfig
+</code></pre></div></div>
+
+<p>For programmers, it should be completely unsurprising that it is not in some sort of path because it need not be resolved automatically. Later, we will see that this is not the case for the other type of libraries.</p>
+
+<p>It is also possible to inspect the derivation itself in a human-readable JSON form with the <code class="language-plaintext highlighter-rouge">nix</code> command, which lists the mysterious outputs that were mentioned before:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix derivation show /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+...lots of json output
+</code></pre></div></div>
+
+<p>Here is a snippet from the part of the JSON that specifically contains the outputs:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"doc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/nix/store/gkahdgly8x8z8b6cvgab4gij0niajx7x-glm-1.0.1-doc"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"out"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>It is not hard to deduce from this that outputs have a one-to-one correspondence with store paths. So that is what they create when you realise a derivation with:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--realize</span> /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+</code></pre></div></div>
+
+<p>Note that the <code class="language-plaintext highlighter-rouge">.drv</code> file that has produced the store path we are looking for is called the <em>deriver</em>. The inverse operation—finding a derivation from a store path—simply involves asking for the deriver.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--query</span> <span class="nt">--deriver</span> /nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1/
+/nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+</code></pre></div></div>
+
+<p>Putting everything together, we can see the chain of symlinks in this concise graph:</p>
+
+<p><img alt="Derivation Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSIxMDc2cHQiIGhlaWdodD0iMzUycHQiCiB2aWV3Qm94PSIwLjAwIDAuMDAgMTA3Ni4wMCAzNTIuMDYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgo8ZyBpZD0iZ3JhcGgwIiBjbGFzcz0iZ3JhcGgiIHRyYW5zZm9ybT0ic2NhbGUoMSAxKSByb3RhdGUoMCkgdHJhbnNsYXRlKDQgMzQ4LjA2KSI+Cjx0aXRsZT5HPC90aXRsZT4KPGcgaWQ9ImNsdXN0MSIgY2xhc3M9ImNsdXN0ZXIiPgo8dGl0bGU+Y2x1c3Rlcl9kZXJpdmF0aW9uPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI4LC04IDgsLTMzNi4wNiAxMDYwLC0zMzYuMDYgMTA2MCwtOCA4LC04Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjUzNCIgeT0iLTMxOC43NiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5EZXJpdmF0aW9uIOKGkiBvdXRwdXRzIChsaWJyYXJ5IGV4YW1wbGUpPC90ZXh0Pgo8L2c+CjwhLS0gZHJ2IC0tPgo8ZyBpZD0ibm9kZTEiIGNsYXNzPSJub2RlIj4KPHRpdGxlPmRydjwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSI1MzIiIGN5PSItMjcyLjc2IiByeD0iMzE3LjMxIiByeT0iMzAuMDUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNTMyIiB5PSItMjc2LjcxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPi9uaXgvc3RvcmUvMjVyZHlzeWJibDVhYW5na2drZHpuYzU3eGZpaHEyemsmIzQ1O2dsbSYjNDU7MS4wLjEuZHJ2PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI1MzIiIHk9Ii0yNTkuNDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KGRlcml2YXRpb24pPC90ZXh0Pgo8L2c+CjwhLS0gb3V0cHV0c19kb2MgLS0+CjxnIGlkPSJub2RlMiIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+b3V0cHV0c19kb2M8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMjA0IiBjeT0iLTE1OS40MSIgcng9IjE4Ny45MSIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIwNCIgeT0iLTE2My4zNiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4vbml4L3N0b3JlL2drYWhkZ2x5Li4uJiM0NTtnbG0mIzQ1OzEuMC4xJiM0NTtkb2M8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIwNCIgeT0iLTE0Ni4xMSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4ob3V0cHV0OiBkb2MpPC90ZXh0Pgo8L2c+CjwhLS0gZHJ2JiM0NTsmZ3Q7b3V0cHV0c19kb2MgLS0+CjxnIGlkPSJlZGdlMSIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+ZHJ2JiM0NTsmZ3Q7b3V0cHV0c19kb2M8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNNDQ4LjM4LC0yNDMuMzdDNDAxLC0yMjcuMjkgMzQxLjc0LC0yMDcuMTcgMjkzLjQzLC0xOTAuNzciLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMjk0LjcsLTE4Ny41IDI4NC4xLC0xODcuNiAyOTIuNDUsLTE5NC4xMyAyOTQuNywtMTg3LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDI4LjE0IiB5PSItMjExLjQxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPm91dHB1dDogZG9jPC90ZXh0Pgo8L2c+CjwhLS0gb3V0cHV0c19vdXQgLS0+CjxnIGlkPSJub2RlMyIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+b3V0cHV0c19vdXQ8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iNzMxIiBjeT0iLTE1OS40MSIgcng9IjMyMS4wMyIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjczMSIgeT0iLTE2My4zNiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4vbml4L3N0b3JlL25scnE4czI3M3gza2JtMnc0ZzkwcHlteDFhYjl3dzNwJiM0NTtnbG0mIzQ1OzEuMC4xPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI3MzEiIHk9Ii0xNDYuMTEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KG91dHB1dDogb3V0KTwvdGV4dD4KPC9nPgo8IS0tIGRydiYjNDU7Jmd0O291dHB1dHNfb3V0IC0tPgo8ZyBpZD0iZWRnZTIiIGNsYXNzPSJlZGdlIj4KPHRpdGxlPmRydiYjNDU7Jmd0O291dHB1dHNfb3V0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTU4NC4wMiwtMjQyLjY1QzYxMC4wOCwtMjI4LjA3IDY0MS44LC0yMTAuMzIgNjY5LjEsLTE5NS4wNSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI2NzAuNiwtMTk4LjIyIDY3Ny42MSwtMTkwLjI4IDY2Ny4xOCwtMTkyLjExIDY3MC42LC0xOTguMjIiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNjgzLjE2IiB5PSItMjExLjQxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPm91dHB1dDogb3V0PC90ZXh0Pgo8L2c+CjwhLS0gbGliX2ZpbGUgLS0+CjxnIGlkPSJub2RlNCIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+bGliX2ZpbGU8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iNzMxIiBjeT0iLTQ2LjA1IiByeD0iMjM5Ljg5IiByeT0iMzAuMDUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzMxIiB5PSItNTAiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9ubHJxOHMyNzN4Li4uJiM0NTtnbG0mIzQ1OzEuMC4xL2xpYi9saWJnbG0uYTwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzMxIiB5PSItMzIuNzUiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KGFjdHVhbCBmaWxlKTwvdGV4dD4KPC9nPgo8IS0tIG91dHB1dHNfb3V0JiM0NTsmZ3Q7bGliX2ZpbGUgLS0+CjxnIGlkPSJlZGdlMyIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+b3V0cHV0c19vdXQmIzQ1OyZndDtsaWJfZmlsZTwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik03MzEsLTEyOC44NkM3MzEsLTExNi4xNyA3MzEsLTEwMS4xNSA3MzEsLTg3LjQ2Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjczNC41LC04Ny44NyA3MzEsLTc3Ljg3IDcyNy41LC04Ny44NyA3MzQuNSwtODcuODciLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzYxIiB5PSItOTguMDUiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+Y29udGFpbnM8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K"></p>
+
+<p>But why is it stored this way? We have the initial motivation for researching it, so all that remains is reverse engineering the design choice.</p>
+
+<h2 id="scenario-2---understanding-benefits-with-an-example">
+<a class="anchor" href="#scenario-2---understanding-benefits-with-an-example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Scenario 2 - Understanding Benefits with an Example</h2>
+
+<p>Now suppose you had a store path with an executable, say <code class="language-plaintext highlighter-rouge">git</code>. We can leverage the fact that it is in the path to track it down more easily and figure out more stuff about our system. First, we find where its reference is in the path.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>which git
+/home/user/.nix-profile/bin/git
+</code></pre></div></div>
+
+<p>This is part of the running user profile. By definition, profiles in NixOS are symlinks to specific generations. More precisely, there is one profile in every system, but there can be more than one generation. Generations are simply snapshots of profiles, which are pointers for a set of installed packages or system configuration.</p>
+
+<p><img alt="Derivation Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSIzNDlwdCIgaGVpZ2h0PSIxNThwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCAzNDkuMDAgMTU4LjI1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMCIgY2xhc3M9ImdyYXBoIiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDE1NC4yNSkiPgo8dGl0bGU+RzwvdGl0bGU+CjwhLS0gUHJvZmlsZSAtLT4KPGcgaWQ9Im5vZGUxIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5Qcm9maWxlPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIxMzMsLTk2LjI1IDAsLTk2LjI1IDAsLTYwLjI1IDEzMywtNjAuMjUgMTMzLC05Ni4yNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI2Ni41IiB5PSItNzMuNTgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+UHJvZmlsZSAoc3ltbGluayk8L3RleHQ+CjwvZz4KPCEtLSBHZW4xIC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNzPSJub2RlIj4KPHRpdGxlPkdlbjE8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0MSwtMTUwLjI1IDIzMiwtMTUwLjI1IDIzMiwtMTE0LjI1IDM0MSwtMTE0LjI1IDM0MSwtMTUwLjI1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItMTI3LjU4IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPkdlbmVyYXRpb24gMTwvdGV4dD4KPC9nPgo8IS0tIFByb2ZpbGUmIzQ1OyZndDtHZW4xIC0tPgo8ZyBpZD0iZWRnZTIiIGNsYXNzPSJlZGdlIj4KPHRpdGxlPlByb2ZpbGUmIzQ1OyZndDtHZW4xPC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLWRhc2hhcnJheT0iNSwyIiBkPSJNMTMzLjUsLTk0LjZDMTY0Ljk1LC0xMDIuMzkgMjAyLjEsLTExMS41OSAyMzEuNzksLTExOC45NSIvPgo8L2c+CjwhLS0gR2VuMiAtLT4KPGcgaWQ9Im5vZGUzIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5HZW4yPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzNDEsLTk2LjI1IDIzMiwtOTYuMjUgMjMyLC02MC4yNSAzNDEsLTYwLjI1IDM0MSwtOTYuMjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjg2LjUiIHk9Ii03My41OCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5HZW5lcmF0aW9uIDI8L3RleHQ+CjwvZz4KPCEtLSBQcm9maWxlJiM0NTsmZ3Q7R2VuMiAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5Qcm9maWxlJiM0NTsmZ3Q7R2VuMjwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS1kYXNoYXJyYXk9IjUsMiIgZD0iTTEzMy41LC03OC4yNUMxNjQuOTUsLTc4LjI1IDIwMi4xLC03OC4yNSAyMzEuNzksLTc4LjI1Ii8+CjwvZz4KPCEtLSBHZW4zIC0tPgo8ZyBpZD0ibm9kZTQiIGNsYXNzPSJub2RlIj4KPHRpdGxlPkdlbjM8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0MSwtNDIuNSAyMzIsLTQyLjUgMjMyLDAgMzQxLDAgMzQxLC00Mi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItMjUuMiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5HZW5lcmF0aW9uIDM8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItNy45NSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4oY3VycmVudCk8L3RleHQ+CjwvZz4KPCEtLSBQcm9maWxlJiM0NTsmZ3Q7R2VuMyAtLT4KPGcgaWQ9ImVkZ2UxIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5Qcm9maWxlJiM0NTsmZ3Q7R2VuMzwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xMzMuNSwtNjAuOTlDMTYxLjE0LC01My43NiAxOTMuMTksLTQ1LjM5IDIyMC43LC0zOC4xOSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIyMjEuNTQsLTQxLjU5IDIzMC4zMywtMzUuNjggMjE5Ljc3LC0zNC44MiAyMjEuNTQsLTQxLjU5Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjE4Mi41IiB5PSItNTguODEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cG9pbnRzIHRvPC90ZXh0Pgo8L2c+CjwvZz4KPC9zdmc+Cg=="></p>
+
+<p>In our case, you can see the symlink here:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /home/user/.nix-profile
+lrwxrwxrwx 1 user <span class="nb">users </span>44 Apr  5  2025 .nix-profile -&gt; /home/user/.local/state/nix/profiles/profile
+</code></pre></div></div>
+
+<p>Programs in the bin directory of profiles are also symlinks, so using <code class="language-plaintext highlighter-rouge">ls</code> we can find its store path:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /home/user/.nix-profile/bin/git
+lrwxrwxrwx 20 root root 62 Jan  1  1970 /home/user/.nix-profile/bin/git -&gt; /nix/store/v2rxk9xkcxsas64wl7ds31al15cm2wqd-git-2.50.1/bin/git
+</code></pre></div></div>
+
+<p>(The command <code class="language-plaintext highlighter-rouge">readlink -f &lt;symlink&gt;</code> is generally better for fetching the real file of a symlink, but <code class="language-plaintext highlighter-rouge">ls -l</code> will be used for demonstrative purposes.)</p>
+
+<p>Equivalently, NixOS has a system profile, which resides in <code class="language-plaintext highlighter-rouge">/run/current-system</code>; it is the same as <code class="language-plaintext highlighter-rouge">/nix/var/nix/profiles/system</code>, whose content follows this structure:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> /run/current-system
+activate
+bin
+dry-activate
+extra-dependencies
+init
+initrd
+kernel-modules
+nixos-version
+sw
+systemd
+append-initrd-secrets
+boot.json
+etc
+firmware
+init-interface-version
+kernel
+kernel-params
+specialisation
+system
+</code></pre></div></div>
+
+<p>The only difference one needs to understand at this stage of learning is that the packages you install with Home Manager will be in the user profile, and the ones you do not are in the system profile.</p>
+
+<p>Furthermore, <code class="language-plaintext highlighter-rouge">/run/current-system/sw</code> (where <code class="language-plaintext highlighter-rouge">sw</code> is a shorthand for “software”) is where all of our executables are symlinked to. And unsurprisingly, these symlinks point to the store paths we discussed!</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /run/current-system/sw
+lrwxrwxrwx 11 root root 55 Jan  1  1970 /run/current-system/sw -&gt; /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path
+<span class="nv">$ </span><span class="nb">ls</span> /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path
+bin
+etc
+lib
+sbin
+share
+</code></pre></div></div>
+
+<p>An important interjection here is that, since <code class="language-plaintext highlighter-rouge">glm</code> is a static library, it is not located in the <code class="language-plaintext highlighter-rouge">lib</code> subdirectory; only shared library files (<code class="language-plaintext highlighter-rouge">.so</code>) are in it. Just like a path needs to exist for regular programs, it suffices to view this as an equivalent path existing exclusively for shared libraries, which are used by other programs.</p>
+
+<p>Since Git is installed system-wide, you can probably guess that it is in the <code class="language-plaintext highlighter-rouge">bin</code> (binary) directory, which in turn is symlinked to the abovementioned store path.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; ls -l /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path/bin/git
+lrwxrwxrwx 62 root root 65 Jan  1  1970 /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path/bin/git -&gt; /nix/store/gz9a9vvx15cwznzw2h1gr4k7778bbgqk-firejail-wrap/bin/git
+</code></pre></div></div>
+
+<p>Wrapping this section up, you can see everything we have discovered from the system profile in this graph:</p>
+
+<p><img alt="System Profile Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSI3NjJwdCIgaGVpZ2h0PSI0NjVwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCA3NjIuMDAgNDY1LjQyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMCIgY2xhc3M9ImdyYXBoIiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDQ2MS40MikiPgo8dGl0bGU+RzwvdGl0bGU+CjxnIGlkPSJjbHVzdDEiIGNsYXNzPSJjbHVzdGVyIj4KPHRpdGxlPmNsdXN0ZXJfc3lzdGVtPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI4LC04IDgsLTQ0OS40MiA3NDYsLTQ0OS40MiA3NDYsLTggOCwtOCIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii00MzIuMTIiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+U3lzdGVtIHByb2ZpbGUgY2hhaW48L3RleHQ+CjwvZz4KPCEtLSBydW5fY3VycmVudF9zeXN0ZW0gLS0+CjxnIGlkPSJub2RlMSIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+cnVuX2N1cnJlbnRfc3lzdGVtPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0zODYuMTEiIHJ4PSIxMjkuMDUiIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0zOTAuMDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L3J1bi9jdXJyZW50JiM0NTtzeXN0ZW0vc3c8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTM3Mi44MSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4oc3lzdGVtIHN3KTwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9wYXRoIC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNzPSJub2RlIj4KPHRpdGxlPnN5c3RlbV9wYXRoPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0yNzIuNzYiIHJ4PSIzMjUuMjciIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0yNzYuNzEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9mYmRtMnY2cjc4dzNuMGE3Zjc4cGJuamR3cGR3aTEyeCYjNDU7c3lzdGVtJiM0NTtwYXRoPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0yNTkuNDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KHN5c3RlbSYjNDU7cGF0aCk8L3RleHQ+CjwvZz4KPCEtLSBydW5fY3VycmVudF9zeXN0ZW0mIzQ1OyZndDtzeXN0ZW1fcGF0aCAtLT4KPGcgaWQ9ImVkZ2UxIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5ydW5fY3VycmVudF9zeXN0ZW0mIzQ1OyZndDtzeXN0ZW1fcGF0aDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0zNzcsLTM1NS41N0MzNzcsLTM0Mi44OCAzNzcsLTMyNy44NiAzNzcsLTMxNC4xNyIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODAuNSwtMzE0LjU3IDM3NywtMzA0LjU3IDM3My41LC0zMTQuNTcgMzgwLjUsLTMxNC41NyIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0MDQuNzUiIHk9Ii0zMjQuNzYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3ltbGluazwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9iaW5fZ2l0IC0tPgo8ZyBpZD0ibm9kZTMiIGNsYXNzPSJub2RlIj4KPHRpdGxlPnN5c3RlbV9iaW5fZ2l0PC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0xNTkuNDEiIHJ4PSIxNzAuOTQiIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0xNjMuMzYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9mYmRtMi4uLi9iaW4vZ2l0PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0xNDYuMTEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+4oaSIC9uaXgvc3RvcmUvZ3o5YTl2Li4uJiM0NTtnaXQvYmluL2dpdDwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9wYXRoJiM0NTsmZ3Q7c3lzdGVtX2Jpbl9naXQgLS0+CjxnIGlkPSJlZGdlMiIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+c3lzdGVtX3BhdGgmIzQ1OyZndDtzeXN0ZW1fYmluX2dpdDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0zNzcsLTI0Mi4yMUMzNzcsLTIyOS41MyAzNzcsLTIxNC41IDM3NywtMjAwLjgxIi8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM4MC41LC0yMDEuMjIgMzc3LC0xOTEuMjIgMzczLjUsLTIwMS4yMiAzODAuNSwtMjAxLjIyIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzNyIgeT0iLTIxMS40MSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5jb250YWlucyBzeW1saW5rPC90ZXh0Pgo8L2c+CjwhLS0gc3RvcmVfZ2l0MiAtLT4KPGcgaWQ9Im5vZGU0IiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5zdG9yZV9naXQyPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii00Ni4wNSIgcng9IjM2MS4zMyIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTUwIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPi9uaXgvc3RvcmUvZ3o5YTl2dngxNWN3em56dzJoMWdyNGs3Nzc4YmJncWsmIzQ1O2ZpcmVqYWlsJiM0NTt3cmFwL2Jpbi9naXQ8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTMyLjc1IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPihzdG9yZSBwYXRoKTwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9iaW5fZ2l0JiM0NTsmZ3Q7c3RvcmVfZ2l0MiAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5zeXN0ZW1fYmluX2dpdCYjNDU7Jmd0O3N0b3JlX2dpdDI8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMzc3LC0xMjguODZDMzc3LC0xMTYuMTcgMzc3LC0xMDEuMTUgMzc3LC04Ny40NiIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODAuNSwtODcuODcgMzc3LC03Ny44NyAzNzMuNSwtODcuODcgMzgwLjUsLTg3Ljg3Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQwNC43NSIgeT0iLTk4LjA1IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnN5bWxpbms8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K"></p>
+
+<h2 id="the-why--conclusion">
+<a class="anchor" href="#the-why--conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Why &amp; Conclusion</h2>
+
+<p>As we observed in the previous example, the profile is a chain of symlinks whose destinations are store paths in the Nix store. The fact that we can simply switch applications by modifying the symlinks means that, if we later want to revert to an older version of an arbitrary package, say because it broke, all we have to do is make the symlinks point to the old store paths! And that’s precisely what your NixOS system does—automatically manages profiles and the Nix “generations” that you see upon system initialization.</p>
+
+<p>The store path has the version of the package to help distinguish between new and old versions, and the random letters that you see in front of its name (in this case, <code class="language-plaintext highlighter-rouge">fbdm2v6r78w3n0a7f78pbnjdwpdwi12x</code>) is called the <em>store path hash</em>. If two store paths in the Nix store were to have the same name and version, then this random string of letters that gets generated through a mathematical process ensures that they do not conflict. The combination of these three attributes makes up the store path, and this is why the Nix store is called <em>content-addressed</em>.</p>
+
+<p>Obviously, if we modify an existing store path, that could break the link between the derivation, but also make future reverts unreliable. This is why you are not allowed to edit it. The property is called <em>immutability</em>.</p>
+
+<p>Lastly, the reason derivations are the way they are is they orchestrate all of the store paths and provide them all the necessary dependencies. We saw the inner details of how they achieve this in the first example.</p>
+
+<p>And this concludes our witchhunt! We have seen how all of these little things are interconnected in the ecosystem, and you have learned the fundamentals of this complex monolith called the Nix store. I leave the traversal of the user profile located in <code class="language-plaintext highlighter-rouge">~/.nix-profile</code> as an exercise to the reader.</p>
+
+<p>To summarize everything that I demonstrated, below is a cheatsheet of the commands and material introduced above.</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix-store --query --outputs &lt;derivation&gt;</code>: fetch the store paths associated with a derivation</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix-store --query --deriver &lt;store-path&gt;</code>: fetch the derivation that a store path originates from</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix-store --realize &lt;derivation&gt;</code>: build (realise) a derivation; create store paths from outputs</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix derivation show &lt;derivation&gt;</code>: inspect a derivation in human-readable JSON form</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">/run/current-system</code>: the NixOS system profile; same as <code class="language-plaintext highlighter-rouge">/nix/var/nix/profiles/system</code>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">~/.nix-profile</code>: the NixOS user profile</li>
+</ul>
+
+<p>Here are some bonus commands that were not needed but very useful in day-to-day store operation:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix-store --query --referrers &lt;store-path&gt;</code>: see what references a store path</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix-store --query --roots</code>: roots of a store path</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">nix-store --query --graph</code>: produce a neat Graphviz DOT representation of a dependency graph for a package</li>
+</ul>
+
+<p>For further reading, I suggest looking into the official NixOS documentation.</p>
+
+<h2 id="bonus-garbage-collection">
+<a class="anchor" href="#bonus-garbage-collection" aria-hidden="true"><span class="octicon octicon-link"></span></a>Bonus: Garbage Collection</h2>
+
+<p>Ever wondered how the Nix store is able to know which store paths need to be deleted? In case you weren’t aware, garbage collection allows us to delete old store paths by running <code class="language-plaintext highlighter-rouge">nix-collect-garbage -d</code>.</p>
+
+<p>So far, we know that the relation is essentially profile ↔ store ↔ deriver. As it was explained before, store paths are immutable by design. Garbage collection simply identifies every store path that is not reachable from a set of GC roots, and deletes them.</p>
+
+<p>Since every profile generation in <code class="language-plaintext highlighter-rouge">~/.nix-profile</code> is considered a root in and of itself, as long as it exists, these store paths that we saw are considered new. If you build a new generation, the old generations still exist until you delete them or they get automatically deleted, so their store paths are still referenced. In other words, if you want old packages actually removed, you must remove or prune those old generations and then run the garbage collector.</p>
+
+      </article>
+
+      <div id="newsletter-container" class="separator">
+  <h2>Enjoyed reading? Subscribe to my newsletter.</h2>
+
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function ml_webform_success_32409238() {
+    var $ = ml_jQuery || jQuery;
+    $('.ml-subscribe-form-32409238 .row-success').show();
+    $('.ml-subscribe-form-32409238 .row-form').hide();
+  }
+</script>
+
+<script src="https://groot.mailerlite.com/js/w/webforms.min.js?v176e10baa5e7ed80d35ae235be3d5024" type="text/javascript" defer></script>
+<script src="/assets/scripts/newsletter.js" defer></script>
+
+      
+
+
+<div class="author-bio separator">
+  <div class="author-credentials">
+    <img src="/assets/images/icons/quarterstar.svg" alt="Quarterstar" class="author-avatar">
+    <p class="shout">Quarterstar</p>
+  </div>
+  <div class="author-info">
+    <p>Machine learning researcher with special interests in 3D graphics, privacy enhancement, low-level programming, and mathematics.</p>
+  </div>
+  <div class="author-links">
+    
+      <a href="https://github.com/quarterstar"><img src="/assets/images/icons/github-mark.svg" alt="GitHub"></img></a>
+    
+    
+      <a href="https://github.com/quarterstar_"><img src="/assets/images/icons/Reddit_Icon_2Color.svg" alt="Reddit"></img></a>
+    
+    
+      <a href="https://discord.gg/vcfmKdceXF"><img src="/assets/images/icons/Discord-Symbol-Blurple.svg" alt="Discord"></img></a>
+    
+  </div>
+</div>
+
+
+      
+  <script src="https://utteranc.es/client.js"
+          repo="quarterstar/quarterstar"
+          issue-term="pathname"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+
+    </main>
+
+    <footer>
+      <p>&copy; 1970–2025 Quarterstar, All Rights Reserved.</p>
+
+    </footer>
+
+    <script src="/assets/scripts/lazy-load-off-screen.js"></script>
+
+  </body>
+</html>

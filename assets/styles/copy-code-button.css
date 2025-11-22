@@ -1,0 +1,66 @@
+/* container: make <pre> a 2-column grid so the button is inside the box */
+.copy-code-pre {
+  display: grid;
+  grid-template-columns: 1fr auto; /* code takes all space, button takes its width */
+  align-items: start;              /* button at top of its column; change to center if desired */
+  gap: 0;
+  /* visual styles on the pre element (match your theme) */
+  padding: 0.75rem;                 /* inner padding for the code box */
+  border-radius: 8px;
+  background: var(--code-bg, #f6f8fa);
+  position: relative;               /* not strictly needed for grid, but useful */
+  overflow: auto;                   /* allow horizontal scroll for long lines */
+}
+
+/* force the code to occupy the first column */
+.copy-code-pre > code,
+.copy-code-pre > .highlight,
+.copy-code-pre > pre {
+  grid-column: 1;
+}
+
+/* button sits in the second column and is visually inside the pre */
+.copy-code-button {
+  grid-column: 2;
+  justify-self: end;     /* hug the right edge of the pre */
+  align-self: start;     /* top align; change to center if you prefer */
+  margin: 0;             /* keep it inside the padding of pre */
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  border: 0;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  cursor: pointer;
+  transition: opacity .15s ease, transform .12s ease;
+  /* hidden by default (not accessible) */
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* show on hover or keyboard focus (focus-within handles keyboard navigation) */
+.copy-code-pre:hover .copy-code-button,
+.copy-code-pre:focus-within .copy-code-button {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* success / failure states (same as before) */
+.copy-code-button.copied { background: black; }
+.copy-code-button.failed { background: #e76f51; }
+
+/* hide when printing */
+@media print {
+  .copy-code-button { display: none; }
+}
+
+.copied, .failed {
+  text-align: center;
+}
+
+code.hljs {
+  background: transparent !important;
+}

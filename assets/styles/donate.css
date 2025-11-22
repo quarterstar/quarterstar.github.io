@@ -1,0 +1,93 @@
+:root {
+
+}
+
+html.dark-mode {
+
+}
+
+.wall-separator {
+  flex-direction: row;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.donation-method-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.donation-method {
+  gap: 15px;
+  border: 1px solid black;
+  border-radius: 15px;
+  padding: 10px;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.donation-method-split {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.donation-method-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+.donation-method hr {
+  height: 2px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.supports {
+  flex-direction: row;
+  gap: 5px;
+}
+
+.supports {
+  padding: 10px;
+}
+
+.supports img {
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  filter: grayscale(100%);
+  margin: 0 auto;
+}
+
+.processor-list {
+  gap: 15px;
+}
+
+.processor-card-list {
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.processor {
+  padding: 10px;
+}
+
+.processor-logo {
+  width: 64px;
+  height: 64px;
+}
+
+#fiat, #crypto {
+  gap: 10px;
+}
+
+#sponsor-methods, #sponsor-benefits {
+  gap: 10px;
+}

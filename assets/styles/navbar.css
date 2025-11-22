@@ -1,0 +1,227 @@
+:root {
+  --desktop-nav-bg-color: #ffffff;
+  --desktop-nav-entry-color: #000000;
+  --desktop-nav-entry-hover-bg-color: #000000;
+  --desktop-nav-entry-hover-color: #ffffff;
+  --nav-drawer-bg-color: #ffffff;
+  --nav-drawer-entry-color: #000000;
+  --overlay-color: rgba(0, 0, 0, 0.35);
+  --bar-color: #000000;
+}
+
+html.dark-mode {
+  --desktop-nav-bg-color: #191919;
+  --desktop-nav-entry-color: #ffffff;
+  --desktop-nav-entry-hover-bg-color: #111111;
+  --desktop-nav-entry-hover-color: #ffffff;
+  --nav-drawer-bg-color: #191919;
+  --nav-drawer-entry-color: #ffffff;
+  --bar-color: #ffffff;
+}
+
+/* Core header + positioning (critical for layout) */
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px;
+  z-index: 1000;
+}
+
+/* Logo sizing (prevents layout shift) */
+.logo img {
+  width: 64px;
+  height: 64px;
+  vertical-align: middle;
+}
+
+/* Hide logo on tiny viewports (important for layout) */
+@media (max-width: 63px) {
+  .logo img {
+    display: none;
+  }
+}
+
+/* Basic nav links container so desktop layout renders correctly */
+.nav-links {
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+/* Hamburger bars & menu button — visible on mobile */
+.bar {
+  background: var(--bar-color);
+  width: 30px;
+  height: 3px;
+}
+
+.menu-btn {
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+}
+
+.menu-btn:focus {
+  outline: 2px solid #0b66ff;
+  outline-offset: 2px;
+}
+
+/* Overlay used when drawer opens */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-color);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+  z-index: 1050;
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Drawer - minimal + structural rules required immediately */
+.nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 86vw;
+  max-width: 360px;
+  background: var(--nav-drawer-bg-color);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.22, 0.9, 0.27, 1);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+}
+
+/* ensure drawer shows when open */
+.nav-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 40px;
+}
+
+/* Structural list/link styles used before deferred CSS loads */
+.nav-drawer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--nav-drawer-entry-color);
+}
+
+.nav-drawer ul li a {
+  display: block;
+  padding: 14px 0;
+  text-decoration: none;
+  color: var(--nav-drawer-entry-color);
+  font-weight: 600;
+}
+
+/* Accessibility focus for drawer links */
+.nav-drawer ul li a:focus {
+  outline: 2px solid #0b66ff;
+  outline-offset: 4px;
+}
+
+/* Desktop nav (structural rules) */
+.desktop-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: var(--desktop-nav-bg-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(80, 80, 80, 0.5);
+}
+
+/* Desktop link defaults (structural) */
+.desktop-nav ul li a {
+  padding: 1rem;
+  color: var(--desktop-nav-entry-color);
+  text-decoration: none;
+  font-family: "Archivo Black", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-weight: 400;
+}
+
+.desktop-nav ul li a:hover {
+  background-color: var(--desktop-nav-entry-hover-bg-color);
+  color: var(--desktop-nav-entry-hover-color);
+}
+
+/* Reusable groups & spacing (leave display definitions here so layout is correct immediately) */
+.pc-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.mobile-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.brand-btns {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brand-btns .brand-name {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.brand-btns .brand-desc {
+  font-size: 10px;
+}
+
+/* Responsive toggles needed immediately to hide/show elements correctly */
+@media (max-width: 899px) {
+  .nav-links { display: none; }
+  .pc-buttons { display: none; }
+}
+
+@media (min-width: 900px) {
+  .menu-btn { display: none; }
+  .mobile-buttons { display: none; }
+}

@@ -1,0 +1,64 @@
+/* CSS */
+:root{
+  --underline-color: #0ea5a4;     /* turquoise */
+  --underline-thickness: 3px;
+  --underline-gap: .25em;         /* space between text baseline and underline */
+  --underline-duration: 320ms;
+  --underline-ease: cubic-bezier(.2,.9,.2,1);
+}
+
+/* base heading style */
+h2, h3, h4, h5, h6 {
+  display: inline-block;          /* keep underline width tight to text */
+  position: relative;
+  margin: .5rem 0;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;          /* ensure default underlines off */
+}
+
+/* underline pseudo-element */
+h2::after, h3::after, h4::after, h5::after, h6::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--underline-thickness);
+  bottom: calc(-1 * var(--underline-gap));
+  background: var(--underline-color);
+  transform: scaleX(0);
+  opacity: 0;
+  transform-origin: left center;
+  transition:
+    transform var(--underline-duration) var(--underline-ease),
+    opacity var(--underline-duration) var(--underline-ease);
+  will-change: transform, opacity;
+}
+
+/* directions */
+/*.underline-left::after    { transform-origin: left center; }*/
+/*.underline-right::after   { transform-origin: right center; }*/
+/*.underline-center::after  { transform-origin: center center; }*/
+h2::after, h3::after, h4::after, h5::after, h6::after {
+  transform-origin: left center;
+}
+
+/* hover & keyboard focus (focus-visible for accessibility) */
+h2:hover::after, h3:hover::after, h4:hover::after, h5:hover::afect, h6:fover::after,
+h2:hover::focus-visible, h3:hover::focus-visible, h4:hover::focus-visible, h5:hover::afect, h6:fover::focus-visible
+{
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce){
+  .heading::after,
+  .heading:hover::after,
+  .heading:focus-visible::after {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+}
+

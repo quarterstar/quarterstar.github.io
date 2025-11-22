@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://www.quarterstar.tech/feed.xml" rel="self" type="application/atom+xml" /><link href="https://www.quarterstar.tech/" rel="alternate" type="text/html" /><updated>2025-11-22T16:21:15+00:00</updated><id>https://www.quarterstar.tech/feed.xml</id><title type="html">Quarterstar</title><subtitle>Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.</subtitle><entry><title type="html">Template Specialization &amp;amp; Concepts in C++</title><link href="https://www.quarterstar.tech/2025/11/21/concepts-in-cpp" rel="alternate" type="text/html" title="Template Specialization &amp;amp; Concepts in C++" /><published>2025-11-21T00:00:00+00:00</published><updated>2025-11-21T00:00:00+00:00</updated><id>https://www.quarterstar.tech/2025/11/21/concepts-in-cpp</id><content type="html" xml:base="https://www.quarterstar.tech/2025/11/21/concepts-in-cpp"><![CDATA[<p>If you come from Rust, you might miss the value of traits. Thankfully, C++ has something very similar to them. Suppose you are creating your own vector type (for the thousandth time). You probably do something like:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Vector3</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Vector3</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>C++ has a feature called template specialization that allows you to specify behavior for particular instances of the template:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Foo</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="kt">void</span> <span class="n">display</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">"General template"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Foo</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="kt">void</span> <span class="n">display</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">"Specialized for int"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The C++ compiler knows that you are specifying a specialization when you use empty <code class="language-plaintext highlighter-rouge">&lt;&gt;</code>. If you want to be really fancy, you might use it for your vector class like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector2</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">Base</span><span class="p">;</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector3</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector3</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector4</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">w</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector4</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+</code></pre></div></div>
+
+<p>Since inheritance (which is a runtime mechanism) and templates (which are a compile-time mechanism) don’t go well together, we have applied CRTP. But a problem still remains: how do we ensure that the user of our user supplies correct types? In our case, the ones that make sense are integers and floats.</p>
+
+<p>This is where concepts come in. For the basic types like <code class="language-plaintext highlighter-rouge">int</code>, <code class="language-plaintext highlighter-rouge">unsigned int</code>, and so on, the C++ standard groups them under one general name called <em>integral types</em>.</p>
+
+<p>The exact implementation of the things that we will discuss ultimately depend on the C++ implementation by the compiler, but we will use some basic patterns that are common across all of them. Conceptually, <code class="language-plaintext highlighter-rouge">std::is_integral</code>, which is a utility for determining whether a type is one of the integrals, is defined like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span> <span class="p">{</span> <span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">signed</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, <code class="language-plaintext highlighter-rouge">std::false_type</code> is what is known as a <em>type trait</em>. Type traits are compile-time tools that allow you to ask questions about a particular type. Most type traits are implemented with a static boolean member <code class="language-plaintext highlighter-rouge">value</code>, which is precisely what <code class="language-plaintext highlighter-rouge">std::false_type</code> does:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">false_type</span> <span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">type</span> <span class="o">=</span> <span class="n">false_type</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>You can probably guess the implementation of <code class="language-plaintext highlighter-rouge">std::true_type</code> based on this as well. The idea is that if we make specializations inherit <code class="language-plaintext highlighter-rouge">std::true_type</code> instead, the base <code class="language-plaintext highlighter-rouge">value</code> becomes true, which allows the compiler to do some type checking we will see just in a second.</p>
+
+<p>Any type that inherits from a type trait is also a type trait. Consequently, <code class="language-plaintext highlighter-rouge">std::is_integral</code> is a type trait.</p>
+
+<p>The value of a type trait is often abbreviated with <code class="language-plaintext highlighter-rouge">_v</code> prefixes in the standard library:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">is_integral_v</span> <span class="o">=</span> <span class="n">is_integral</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Now, where do concepts come in play? Concepts allow constraining template parameters with semantic rules defined by type traits. That means if we define:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">concept</span> <span class="n">integral</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">is_integral_v</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>And use the concept in place of our <code class="language-plaintext highlighter-rouge">typename</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The compiler, fundamanentally speaking, will evaluate the boolean condition at compile-time. If it is false, you will get a compilation error. We can make the rest of our vector implementation use this concept:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector2</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">Base</span><span class="p">;</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector3</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector3</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector4</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">w</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector4</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+</code></pre></div></div>
+
+<p>You will now notice that, in the following code:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdfloat&gt;</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">"vector.hpp"</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// this is OK</span>
+  <span class="k">auto</span> <span class="n">a</span><span class="p">{</span><span class="n">Vector4</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">float32_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">0.5f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">0.5f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">1.0f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">1.0f</span><span class="mi">32</span><span class="p">}};</span>
+
+  <span class="c1">// this fails to compile because the constraints are not satisfied</span>
+  <span class="k">auto</span> <span class="n">b</span><span class="p">{</span><span class="n">Vector4</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span><span class="s">"A"</span><span class="p">,</span> <span class="s">"B"</span><span class="p">,</span> <span class="s">"B"</span><span class="p">,</span> <span class="s">"C"</span><span class="p">}};</span>
+  
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>So concepts let us have these compile-time guarantees that were impossible before C++20.</p>
+
+<p>Now that you understand how they work and how to use them, enjoy applying them to your codebase (if you don’t have a 32 year old monolith stuck in C++11). Below is a small list of them.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">std::copyable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is copy-constructible and copy-assignable.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::movable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is move-constructible and move-assignable.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::equality_comparable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> supports <code class="language-plaintext highlighter-rouge">==</code> and <code class="language-plaintext highlighter-rouge">!=</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::totally_ordered&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> Supports <code class="language-plaintext highlighter-rouge">&lt;</code>, <code class="language-plaintext highlighter-rouge">&lt;=</code>, <code class="language-plaintext highlighter-rouge">&gt;</code>, <code class="language-plaintext highlighter-rouge">&gt;=</code>, <code class="language-plaintext highlighter-rouge">==</code>, and <code class="language-plaintext highlighter-rouge">!=</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::default_initializable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be default-constructed (T t{} or T t;).</li>
+  <li><code class="language-plaintext highlighter-rouge">std::destructible&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be destroyed with a destructor.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::assignable_from&lt;T, U&gt;</code>: Can assign a value of type <code class="language-plaintext highlighter-rouge">U</code> to a variable of type <code class="language-plaintext highlighter-rouge">T</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::same_as&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> and <code class="language-plaintext highlighter-rouge">U</code> are exactly the same type.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::derived_from&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is derived from <code class="language-plaintext highlighter-rouge">U</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::convertible_to&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be implicitly converted to <code class="language-plaintext highlighter-rouge">U</code>.</li>
+</ul>]]></content><author><name>Quarterstar</name></author><category term="programming" /><category term="cpp" /><summary type="html"><![CDATA[New C++23 feature known as concepts presents new compile-time opportunities]]></summary></entry><entry><title type="html">Why I Stopped Using ChatGPT (For Now) — An Apology to Programmers</title><link href="https://www.quarterstar.tech/2025/11/16/why-i-stopped-using-chatgpt-an-apology-to-programmers" rel="alternate" type="text/html" title="Why I Stopped Using ChatGPT (For Now) — An Apology to Programmers" /><published>2025-11-16T00:00:00+00:00</published><updated>2025-11-16T00:00:00+00:00</updated><id>https://www.quarterstar.tech/2025/11/16/why-i-stopped-using-chatgpt-an-apology-to-programmers</id><content type="html" xml:base="https://www.quarterstar.tech/2025/11/16/why-i-stopped-using-chatgpt-an-apology-to-programmers"><![CDATA[<p>I will try to avoid writing a stereotypical post. It isn’t related to AI’s upper bound on its capabilities or its effect on the environment. Rather, I will focus on the very tiny details of things that it does to your brain and your behavior as a programmer, especially if you are new to the field as a whole.</p>
+
+<p>I loved programming ever since I was a child. It was the thrill of coming back from school and being able to explore the vast amount of things that were waiting for me to discover for the first time. Whether it was my hyperfixation on backend development, learning a new language like Rust, or even working on a simple tool, I knew I had something new to learn.</p>
+
+<p>When you learn something, not necessarily in programming, you come across a bunch of new things along the way. For instance, when you look up a particular programming concept, you may discover a fully-fledged tutorial that you really like and end up reading until the end. Or maybe you come across a community of people who you enjoy talking to and end up becoming a member of it—the point being, you would not have come across that if you had not done the research the extensive way.</p>
+
+<p>Then comes 2022. Two years following the infamous pandemic, a formerly uncompany known as OpenAI comes along and releases a tool. Its name is ChatGPT. You first hear about it from your YouTube feed and decide to make an account yourself to try it out. If you felt amazed simply from having your computer executing your tasks, how would you feel if it could actually “interact” with you? In the semi-distant past, how many times had you used a text to speech model on your phone, and were left disappointed by how specific and robotic you had to be to properly be recognized?</p>
+
+<p>Say no more. Now you can type any construct and permutation of human language, and you can generate a sentence precisely matching your inquiry, with imitated personality traits on top. What’s more, not only do you have a smart drawer that can coalesce information and pick the relevant stuff for you, but it can also compose many pieces of it to create new. And when you used ChatGPT for the first time, I’m sure that you too immediately thought of all the things you could start doing with it.</p>
+
+<p>Whenever you work with your colleagues on a project, you can divide the workload into chunks and assign each specific tasks. For instance, you could expect a reasonably small application feature to be implemented in a few days, and you still need to do your own share of work to make sure that the quota is completed in due time.</p>
+
+<p>With ChatGPT, you might initially view it as a coworker. Maybe you assign it a few things to do here and there, but you still do the business logic of your app. However, there is one fundamental difference between that and a human worker: you do not have to wait for it to finish its work. Consequently, you start thinking more and more often, “I don’t wanna have to look this up in the docs, could I ask ChatGPT instead?”</p>
+
+<p>The issue comes when you forget the ability to formulate your issues in a general sense. Back in the old days (I’m not old, trust me), we had what was known as a <a href="https://en.wikipedia.org/wiki/Minimal_reproducible_example">minimal reproducible example</a> and <a href="https://stackexchange.com">Stack Overflow</a>. Now, you have reached a point where you ask ChatGPT—your boundless coworker—to complete so much of your work, that you no longer remember how to do that. Instead, you ask it, “how can I do this very specific thing under very specific conditions?” For example, if you wanted to remember the syntax of class instantiation in C++, you would search “c++ creating classes” on Google and find a relevant article or documentation, precisely detailing the process as well as additional information. Now, you are stuck in a loop where you continuously ask a machine for very specific information and expect a very fast response. You lose the patience that you previously had. You expect more and more things to be done by this machine. Slowly but surely, you forget how to properly use a search engine; you become too lazy to open up the documentation; you inspect your Bash script and think, “damn, what do these three commands in that function do? I have no idea. Oh well, time to ask ChatGPT until I forget them again!” And what’s worse, sometimes, when you ask it over and over to fix an issue and it keeps hallucinating, as you are typing the question, you realize that it is something as simple as fixing a semicolon. But you reprogrammed your brain to immediately prompt ChatGPT whenever you have even such a miniscule issue. And it’s not your fault, since there was no way to consciously know that such a neurological change would take effect.</p>
+
+<p>And this practice to other areas of your brain as well. You try to solve a mathematical problem, but you give up on solving it too early and immediately seek for the solution, or you guessed it, ask ChatGPT. You get too worried about the process being incorrect, so you fallback to the good ol’ reliable. You seek validation for your ideas instead of actually contemplating yourself if they are good, to the point where your critical thinking is nonexistent.</p>
+
+<p>As an example, if you are an active AI user, try to think about what kind of things you commonly expect it to validate for you, and then try to weigh how much cerebral activity it would require for you to actually come up with a trivial answer. And as another exercise, if you consistently ask an AI about documentation for a particular library (or in my case, Nix as a whole), try to find what documentation could have otherwise been used, or a web interface, where you can immediately type a function or heuristically guess its name, to gain a much more reliable answer faster (in my case, one I discovered was <a href="https://noogle.dev">noogle.dev</a> by doing this, a very useful website for Nix).</p>
+
+<p>Lets take a step even more in the past. when my programming stage was still at its infancy, we had other tools. Before ChatGPT, there was GitHub Copilot, or for the real OG’s, Tabnine. The reason the distinction is important is because it was a line completion tool and not full code completion integration. Do you think that reduces the scope of the issue? Think again. As a result of using this tool during its beta phase, my brain would sometimes stop thinking and “pause,” expecting a code suggestion by Copilot, even for something like indexing an array. Need to implement a merge sort? Don’t use your knowledge from your DS&amp;A 100 course, just wait. If the API took many seconds to receive a response from the server, you would simply be staring at your monitor with your brain effectively shut off. After all, if a tool exists that makes your workflow more efficient, what could the side effects of using your brain less be? The phenomenon in question was later coined the <a href="https://thomasvogelaar.me/posts/the-copilot-pause/">Copilot Pause</a>, and I stopped using the tool a bit later for this very exact reason.</p>
+
+<p>A corollary form of this phenomenon for LLMs is what I shall call from now on the Generalized Problem Corrosion. I mentioned many issues that you could face as a programmer, and if you think about it, they all boil down to the fact that you no longer reason how your specific inquiry could be part of a larger problem set, and you could have researched that broader problem set instead to gain access to a plethora of more information. Perhaps it is just me, but I find it significantly harder to find the proper Google query I have to use for turning a specific query to a general one now.</p>
+
+<p>Circling back to the point of outsourcing validation, whenever I make posts like this, I tend to ask an LLM to criticize it and determine whether it is good enough to share to others. This time, I have had zero input from such AI, and I am simply trusting my good old primitive cognitive abilities that say I have a problem which other people might share. And in fact, I am trying to limit my AI usage as a whole. To do this, I have made the decision to add a rule to my brain such that, I can only use an AI tool under the following conditions:</p>
+
+<ul>
+  <li>I have already spent 30 minutes trying to solve the problem.</li>
+  <li>I have already exhausted all Internet sources and searched for new ones.</li>
+  <li>Independently of the above conditions, I can ask for feedback on how well I have completed a task only if I have already completed that task.</li>
+</ul>
+
+<p>In the future, I hope I will be able to trim it completely. If you think you are using AI responsibly, try to take the things I said here and think about if your problem solving abilities are actually as good as they were.</p>
+
+<p>For clarification, this post is not to share any hatred towards AI. I myself am an aspiring machine learning- and 3D graphics- hybrid engineer, so I use and develop it in one form of another. And there are definitely some edge cases where using an LLM does more good than harm. But in general, when AI is used for data <em>extrapolation</em> instead of <em>interpolation</em>, that is when the issue arises. This isn’t an unsolvable problem either—it’s just that our current architecture of LLMs which depend on token prediction and statistics are largely capped. If you are curious about what the successors of AI could be, I recommend looking into biocomputing solutions like <a href="https://en.wikipedia.org/wiki/Organoid">organoids</a>.</p>
+
+<p>To conclude, I am not apologizing to the programming community for the mere act of using AI, but rather for this peculiar reason and the fact I have told people in the past to use it in scenarios where it did not particularly shine. There is nothing you can do about other people who are continuously overreliant on such tools, but you can always take the initiative to make yourself better.</p>]]></content><author><name>Quarterstar</name></author><summary type="html"><![CDATA[Newsflash: Data extrapolation by computers is marginally worse than interpolation]]></summary></entry><entry><title type="html">Understanding the Nix Store by Hunting Packages Down</title><link href="https://www.quarterstar.tech/2025/10/26/understanding-the-nix-store-by-hunting-packages-down" rel="alternate" type="text/html" title="Understanding the Nix Store by Hunting Packages Down" /><published>2025-10-26T00:00:00+00:00</published><updated>2025-10-26T00:00:00+00:00</updated><id>https://www.quarterstar.tech/2025/10/26/understanding-the-nix-store-by-hunting-packages-down</id><content type="html" xml:base="https://www.quarterstar.tech/2025/10/26/understanding-the-nix-store-by-hunting-packages-down"><![CDATA[<p>In NixOS, packages installed on the system do not follow the standard Linux filesystem hierarchy. I see this nonstandard approach perplex newcomers who are not familiar with it in a practical way. Thankfully, Nix(OS) provides a set of utilities to traverse its special quirks, in the form of commands. This article focuses on such commands, the motivation behind using them, and how they relate to the Nix store. It also aims to show (partially) why it is designed this way by using concrete examples.</p>
+
+<p>By the end of this, you will know how to effectively navigate the Nix store and understand the underlying principles of its package management system; you will learn the Nix store’s structure, the relationship between derivations and store paths, and how symlinks and profiles work to manage packages.</p>
+
+<p>This is my first blog, so I will keep it concise to get feedback on the pacing, tone, and the content being covered. I hope it’s helpful 🙏</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>Before I begin, a few infamous terms need to be thrown out of the way. A <em>derivation</em> is a build recipe for software. It consists of inputs and outputs. Outputs are what we will later discover to be directly connected to paths in the Nix store (store paths). Store paths are always directories, and they are one kind of object in the Nix store, or a store object. There are other store objects, and in fact derivations are a store object. Store paths are a byproduct of derivations, and they contain the programs that we use.</p>
+
+<p>Normally, for a top-to-bottom approach like this you would start with something everyone is familiar with, such as software applications. Instead, I will take the converse approach to give further motivation for the concepts in this blog.</p>
+
+<h2 id="scenario-1---finding-a-library">Scenario 1 - Finding a Library</h2>
+
+<p>For the first scenario, suppose you are a programmer and have installed a library like <code class="language-plaintext highlighter-rouge">glm</code> on your NixOS system, which is a mathematical library for C/C++. If you do not understand what that means, imagine code that exists on your system as a package that you cannot directly run. Since it is not an executable, you cannot simply cheat your way by reading a symlink in your path (though specialized environment variables exist). So unless we want to run <code class="language-plaintext highlighter-rouge">find</code> in <code class="language-plaintext highlighter-rouge">/nix/store</code> and wait until the heat death of the universe for it to finish, and then go through duplicate installations of the library to find the one we are looking for, we need to learn some Nix commands.</p>
+
+<p>First, we need to enter a Nix REPL environment to resolve the package directly. REPL stands for Read-Eval-Print Loop, which is a powerful environment for testing various Nix expressions. We can access it with the primary <code class="language-plaintext highlighter-rouge">nix</code> command.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix repl
+nix-repl&gt; pkgs <span class="o">=</span> import &lt;nixpkgs&gt; <span class="o">{}</span>
+nix-repl&gt; pkgs.glm
+«derivation /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv»
+</code></pre></div></div>
+
+<p>This article assumes a basic familiarity with the Nix language, so a crash course for it will not be interleaved. But as a side note, attributes in Nix are evaluated lazily, so we do not worry about the import taking a long time. This is due to the fact that lazy evaluation guarantees expressions are evaluated only when they are needed—not when they are defined.</p>
+
+<p>The last command yields a path because the interpreter treats it as a special kind of attribute set that was introduced as a derivation. Indeed, we can confirm that by running another command in the environment.</p>
+
+<div class="language-nix highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">nix-repl</span><span class="o">&gt;</span> <span class="nv">lib</span> <span class="o">=</span> <span class="nv">pkgs</span><span class="o">.</span><span class="nv">lib</span>
+<span class="nv">nix-repl</span><span class="o">&gt;</span> <span class="nv">lib</span><span class="o">.</span><span class="nv">attrsets</span><span class="o">.</span><span class="nv">isDerivation</span> <span class="nv">pkgs</span><span class="o">.</span><span class="nv">glm</span>
+<span class="kc">true</span>
+</code></pre></div></div>
+
+<aside class="callout callout--tip" role="note" aria-label="Tip">
+  <div class="callout__inner">
+    <div class="callout-header">
+      <span class="callout__icon" aria-hidden="true">💡</span><strong class="callout__title">Tip</strong></div>
+
+    <div class="callout__content">
+<p>Use <a href="https://noogle.dev/">noogle.dev</a> for looking through <code class="language-plaintext highlighter-rouge">lib</code> and <a href="https://mynixos.com/">mynixos.com</a> for looking through <code class="language-plaintext highlighter-rouge">pkgs</code>.</p>
+</div>
+  </div>
+</aside>
+
+<p>From the penultimate set of commands, we infer that the derivation is located at <code class="language-plaintext highlighter-rouge">/nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv</code>. (Derivations always use the <code class="language-plaintext highlighter-rouge">.drv</code> file extension.)</p>
+
+<p>Every derivation (<code class="language-plaintext highlighter-rouge">.drv</code>) has a set of outputs. When a derivation is realised (i.e. built), these become what we will find out to be <em>store paths</em>.</p>
+
+<p>The next step is finding the actual store path where the library file (<code class="language-plaintext highlighter-rouge">.a</code> or <code class="language-plaintext highlighter-rouge">.so</code>) resides in. We can use the <code class="language-plaintext highlighter-rouge">nix-store</code> command to achieve this.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--query</span> <span class="nt">--outputs</span> /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+/nix/store/gkahdgly8x8z8b6cvgab4gij0niajx7x-glm-1.0.1-doc
+/nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1
+</code></pre></div></div>
+
+<p>The latter is the one we are looking for since the former is documentation. This shows that store paths are blobs in the Nix store where different versions of the same package may exist. It is now trivial to list the <code class="language-plaintext highlighter-rouge">lib</code> directory, which reveals that the library we are searching for is there and is statically-linked.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> /nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1/lib
+libglm.a
+pkgconfig
+</code></pre></div></div>
+
+<p>For programmers, it should be completely unsurprising that it is not in some sort of path because it need not be resolved automatically. Later, we will see that this is not the case for the other type of libraries.</p>
+
+<p>It is also possible to inspect the derivation itself in a human-readable JSON form with the <code class="language-plaintext highlighter-rouge">nix</code> command, which lists the mysterious outputs that were mentioned before:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix derivation show /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+...lots of json output
+</code></pre></div></div>
+
+<p>Here is a snippet from the part of the JSON that specifically contains the outputs:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"doc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/nix/store/gkahdgly8x8z8b6cvgab4gij0niajx7x-glm-1.0.1-doc"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"out"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>It is not hard to deduce from this that outputs have a one-to-one correspondence with store paths. So that is what they create when you realise a derivation with:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--realize</span> /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+</code></pre></div></div>
+
+<p>Note that the <code class="language-plaintext highlighter-rouge">.drv</code> file that has produced the store path we are looking for is called the <em>deriver</em>. The inverse operation—finding a derivation from a store path—simply involves asking for the deriver.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--query</span> <span class="nt">--deriver</span> /nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1/
+/nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+</code></pre></div></div>
+
+<p>Putting everything together, we can see the chain of symlinks in this concise graph:</p>
+
+<p><img alt="Derivation Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSIxMDc2cHQiIGhlaWdodD0iMzUycHQiCiB2aWV3Qm94PSIwLjAwIDAuMDAgMTA3Ni4wMCAzNTIuMDYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgo8ZyBpZD0iZ3JhcGgwIiBjbGFzcz0iZ3JhcGgiIHRyYW5zZm9ybT0ic2NhbGUoMSAxKSByb3RhdGUoMCkgdHJhbnNsYXRlKDQgMzQ4LjA2KSI+Cjx0aXRsZT5HPC90aXRsZT4KPGcgaWQ9ImNsdXN0MSIgY2xhc3M9ImNsdXN0ZXIiPgo8dGl0bGU+Y2x1c3Rlcl9kZXJpdmF0aW9uPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI4LC04IDgsLTMzNi4wNiAxMDYwLC0zMzYuMDYgMTA2MCwtOCA4LC04Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjUzNCIgeT0iLTMxOC43NiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5EZXJpdmF0aW9uIOKGkiBvdXRwdXRzIChsaWJyYXJ5IGV4YW1wbGUpPC90ZXh0Pgo8L2c+CjwhLS0gZHJ2IC0tPgo8ZyBpZD0ibm9kZTEiIGNsYXNzPSJub2RlIj4KPHRpdGxlPmRydjwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSI1MzIiIGN5PSItMjcyLjc2IiByeD0iMzE3LjMxIiByeT0iMzAuMDUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNTMyIiB5PSItMjc2LjcxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPi9uaXgvc3RvcmUvMjVyZHlzeWJibDVhYW5na2drZHpuYzU3eGZpaHEyemsmIzQ1O2dsbSYjNDU7MS4wLjEuZHJ2PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI1MzIiIHk9Ii0yNTkuNDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KGRlcml2YXRpb24pPC90ZXh0Pgo8L2c+CjwhLS0gb3V0cHV0c19kb2MgLS0+CjxnIGlkPSJub2RlMiIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+b3V0cHV0c19kb2M8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMjA0IiBjeT0iLTE1OS40MSIgcng9IjE4Ny45MSIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIwNCIgeT0iLTE2My4zNiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4vbml4L3N0b3JlL2drYWhkZ2x5Li4uJiM0NTtnbG0mIzQ1OzEuMC4xJiM0NTtkb2M8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIwNCIgeT0iLTE0Ni4xMSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4ob3V0cHV0OiBkb2MpPC90ZXh0Pgo8L2c+CjwhLS0gZHJ2JiM0NTsmZ3Q7b3V0cHV0c19kb2MgLS0+CjxnIGlkPSJlZGdlMSIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+ZHJ2JiM0NTsmZ3Q7b3V0cHV0c19kb2M8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNNDQ4LjM4LC0yNDMuMzdDNDAxLC0yMjcuMjkgMzQxLjc0LC0yMDcuMTcgMjkzLjQzLC0xOTAuNzciLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMjk0LjcsLTE4Ny41IDI4NC4xLC0xODcuNiAyOTIuNDUsLTE5NC4xMyAyOTQuNywtMTg3LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDI4LjE0IiB5PSItMjExLjQxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPm91dHB1dDogZG9jPC90ZXh0Pgo8L2c+CjwhLS0gb3V0cHV0c19vdXQgLS0+CjxnIGlkPSJub2RlMyIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+b3V0cHV0c19vdXQ8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iNzMxIiBjeT0iLTE1OS40MSIgcng9IjMyMS4wMyIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjczMSIgeT0iLTE2My4zNiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4vbml4L3N0b3JlL25scnE4czI3M3gza2JtMnc0ZzkwcHlteDFhYjl3dzNwJiM0NTtnbG0mIzQ1OzEuMC4xPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI3MzEiIHk9Ii0xNDYuMTEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KG91dHB1dDogb3V0KTwvdGV4dD4KPC9nPgo8IS0tIGRydiYjNDU7Jmd0O291dHB1dHNfb3V0IC0tPgo8ZyBpZD0iZWRnZTIiIGNsYXNzPSJlZGdlIj4KPHRpdGxlPmRydiYjNDU7Jmd0O291dHB1dHNfb3V0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTU4NC4wMiwtMjQyLjY1QzYxMC4wOCwtMjI4LjA3IDY0MS44LC0yMTAuMzIgNjY5LjEsLTE5NS4wNSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI2NzAuNiwtMTk4LjIyIDY3Ny42MSwtMTkwLjI4IDY2Ny4xOCwtMTkyLjExIDY3MC42LC0xOTguMjIiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNjgzLjE2IiB5PSItMjExLjQxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPm91dHB1dDogb3V0PC90ZXh0Pgo8L2c+CjwhLS0gbGliX2ZpbGUgLS0+CjxnIGlkPSJub2RlNCIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+bGliX2ZpbGU8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iNzMxIiBjeT0iLTQ2LjA1IiByeD0iMjM5Ljg5IiByeT0iMzAuMDUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzMxIiB5PSItNTAiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9ubHJxOHMyNzN4Li4uJiM0NTtnbG0mIzQ1OzEuMC4xL2xpYi9saWJnbG0uYTwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzMxIiB5PSItMzIuNzUiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KGFjdHVhbCBmaWxlKTwvdGV4dD4KPC9nPgo8IS0tIG91dHB1dHNfb3V0JiM0NTsmZ3Q7bGliX2ZpbGUgLS0+CjxnIGlkPSJlZGdlMyIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+b3V0cHV0c19vdXQmIzQ1OyZndDtsaWJfZmlsZTwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik03MzEsLTEyOC44NkM3MzEsLTExNi4xNyA3MzEsLTEwMS4xNSA3MzEsLTg3LjQ2Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjczNC41LC04Ny44NyA3MzEsLTc3Ljg3IDcyNy41LC04Ny44NyA3MzQuNSwtODcuODciLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzYxIiB5PSItOTguMDUiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+Y29udGFpbnM8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K" /></p>
+
+<p>But why is it stored this way? We have the initial motivation for researching it, so all that remains is reverse engineering the design choice.</p>
+
+<h2 id="scenario-2---understanding-benefits-with-an-example">Scenario 2 - Understanding Benefits with an Example</h2>
+
+<p>Now suppose you had a store path with an executable, say <code class="language-plaintext highlighter-rouge">git</code>. We can leverage the fact that it is in the path to track it down more easily and figure out more stuff about our system. First, we find where its reference is in the path.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>which git
+/home/user/.nix-profile/bin/git
+</code></pre></div></div>
+
+<p>This is part of the running user profile. By definition, profiles in NixOS are symlinks to specific generations. More precisely, there is one profile in every system, but there can be more than one generation. Generations are simply snapshots of profiles, which are pointers for a set of installed packages or system configuration.</p>
+
+<p><img alt="Derivation Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSIzNDlwdCIgaGVpZ2h0PSIxNThwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCAzNDkuMDAgMTU4LjI1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMCIgY2xhc3M9ImdyYXBoIiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDE1NC4yNSkiPgo8dGl0bGU+RzwvdGl0bGU+CjwhLS0gUHJvZmlsZSAtLT4KPGcgaWQ9Im5vZGUxIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5Qcm9maWxlPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIxMzMsLTk2LjI1IDAsLTk2LjI1IDAsLTYwLjI1IDEzMywtNjAuMjUgMTMzLC05Ni4yNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI2Ni41IiB5PSItNzMuNTgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+UHJvZmlsZSAoc3ltbGluayk8L3RleHQ+CjwvZz4KPCEtLSBHZW4xIC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNzPSJub2RlIj4KPHRpdGxlPkdlbjE8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0MSwtMTUwLjI1IDIzMiwtMTUwLjI1IDIzMiwtMTE0LjI1IDM0MSwtMTE0LjI1IDM0MSwtMTUwLjI1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItMTI3LjU4IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPkdlbmVyYXRpb24gMTwvdGV4dD4KPC9nPgo8IS0tIFByb2ZpbGUmIzQ1OyZndDtHZW4xIC0tPgo8ZyBpZD0iZWRnZTIiIGNsYXNzPSJlZGdlIj4KPHRpdGxlPlByb2ZpbGUmIzQ1OyZndDtHZW4xPC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLWRhc2hhcnJheT0iNSwyIiBkPSJNMTMzLjUsLTk0LjZDMTY0Ljk1LC0xMDIuMzkgMjAyLjEsLTExMS41OSAyMzEuNzksLTExOC45NSIvPgo8L2c+CjwhLS0gR2VuMiAtLT4KPGcgaWQ9Im5vZGUzIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5HZW4yPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzNDEsLTk2LjI1IDIzMiwtOTYuMjUgMjMyLC02MC4yNSAzNDEsLTYwLjI1IDM0MSwtOTYuMjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjg2LjUiIHk9Ii03My41OCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5HZW5lcmF0aW9uIDI8L3RleHQ+CjwvZz4KPCEtLSBQcm9maWxlJiM0NTsmZ3Q7R2VuMiAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5Qcm9maWxlJiM0NTsmZ3Q7R2VuMjwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS1kYXNoYXJyYXk9IjUsMiIgZD0iTTEzMy41LC03OC4yNUMxNjQuOTUsLTc4LjI1IDIwMi4xLC03OC4yNSAyMzEuNzksLTc4LjI1Ii8+CjwvZz4KPCEtLSBHZW4zIC0tPgo8ZyBpZD0ibm9kZTQiIGNsYXNzPSJub2RlIj4KPHRpdGxlPkdlbjM8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0MSwtNDIuNSAyMzIsLTQyLjUgMjMyLDAgMzQxLDAgMzQxLC00Mi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItMjUuMiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5HZW5lcmF0aW9uIDM8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItNy45NSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4oY3VycmVudCk8L3RleHQ+CjwvZz4KPCEtLSBQcm9maWxlJiM0NTsmZ3Q7R2VuMyAtLT4KPGcgaWQ9ImVkZ2UxIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5Qcm9maWxlJiM0NTsmZ3Q7R2VuMzwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xMzMuNSwtNjAuOTlDMTYxLjE0LC01My43NiAxOTMuMTksLTQ1LjM5IDIyMC43LC0zOC4xOSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIyMjEuNTQsLTQxLjU5IDIzMC4zMywtMzUuNjggMjE5Ljc3LC0zNC44MiAyMjEuNTQsLTQxLjU5Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjE4Mi41IiB5PSItNTguODEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cG9pbnRzIHRvPC90ZXh0Pgo8L2c+CjwvZz4KPC9zdmc+Cg==" /></p>
+
+<p>In our case, you can see the symlink here:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /home/user/.nix-profile
+lrwxrwxrwx 1 user <span class="nb">users </span>44 Apr  5  2025 .nix-profile -&gt; /home/user/.local/state/nix/profiles/profile
+</code></pre></div></div>
+
+<p>Programs in the bin directory of profiles are also symlinks, so using <code class="language-plaintext highlighter-rouge">ls</code> we can find its store path:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /home/user/.nix-profile/bin/git
+lrwxrwxrwx 20 root root 62 Jan  1  1970 /home/user/.nix-profile/bin/git -&gt; /nix/store/v2rxk9xkcxsas64wl7ds31al15cm2wqd-git-2.50.1/bin/git
+</code></pre></div></div>
+
+<p>(The command <code class="language-plaintext highlighter-rouge">readlink -f &lt;symlink&gt;</code> is generally better for fetching the real file of a symlink, but <code class="language-plaintext highlighter-rouge">ls -l</code> will be used for demonstrative purposes.)</p>
+
+<p>Equivalently, NixOS has a system profile, which resides in <code class="language-plaintext highlighter-rouge">/run/current-system</code>; it is the same as <code class="language-plaintext highlighter-rouge">/nix/var/nix/profiles/system</code>, whose content follows this structure:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> /run/current-system
+activate
+bin
+dry-activate
+extra-dependencies
+init
+initrd
+kernel-modules
+nixos-version
+sw
+systemd
+append-initrd-secrets
+boot.json
+etc
+firmware
+init-interface-version
+kernel
+kernel-params
+specialisation
+system
+</code></pre></div></div>
+
+<p>The only difference one needs to understand at this stage of learning is that the packages you install with Home Manager will be in the user profile, and the ones you do not are in the system profile.</p>
+
+<p>Furthermore, <code class="language-plaintext highlighter-rouge">/run/current-system/sw</code> (where <code class="language-plaintext highlighter-rouge">sw</code> is a shorthand for “software”) is where all of our executables are symlinked to. And unsurprisingly, these symlinks point to the store paths we discussed!</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /run/current-system/sw
+lrwxrwxrwx 11 root root 55 Jan  1  1970 /run/current-system/sw -&gt; /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path
+<span class="nv">$ </span><span class="nb">ls</span> /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path
+bin
+etc
+lib
+sbin
+share
+</code></pre></div></div>
+
+<p>An important interjection here is that, since <code class="language-plaintext highlighter-rouge">glm</code> is a static library, it is not located in the <code class="language-plaintext highlighter-rouge">lib</code> subdirectory; only shared library files (<code class="language-plaintext highlighter-rouge">.so</code>) are in it. Just like a path needs to exist for regular programs, it suffices to view this as an equivalent path existing exclusively for shared libraries, which are used by other programs.</p>
+
+<p>Since Git is installed system-wide, you can probably guess that it is in the <code class="language-plaintext highlighter-rouge">bin</code> (binary) directory, which in turn is symlinked to the abovementioned store path.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; ls -l /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path/bin/git
+lrwxrwxrwx 62 root root 65 Jan  1  1970 /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path/bin/git -&gt; /nix/store/gz9a9vvx15cwznzw2h1gr4k7778bbgqk-firejail-wrap/bin/git
+</code></pre></div></div>
+
+<p>Wrapping this section up, you can see everything we have discovered from the system profile in this graph:</p>
+
+<p><img alt="System Profile Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSI3NjJwdCIgaGVpZ2h0PSI0NjVwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCA3NjIuMDAgNDY1LjQyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMCIgY2xhc3M9ImdyYXBoIiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDQ2MS40MikiPgo8dGl0bGU+RzwvdGl0bGU+CjxnIGlkPSJjbHVzdDEiIGNsYXNzPSJjbHVzdGVyIj4KPHRpdGxlPmNsdXN0ZXJfc3lzdGVtPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI4LC04IDgsLTQ0OS40MiA3NDYsLTQ0OS40MiA3NDYsLTggOCwtOCIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii00MzIuMTIiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+U3lzdGVtIHByb2ZpbGUgY2hhaW48L3RleHQ+CjwvZz4KPCEtLSBydW5fY3VycmVudF9zeXN0ZW0gLS0+CjxnIGlkPSJub2RlMSIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+cnVuX2N1cnJlbnRfc3lzdGVtPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0zODYuMTEiIHJ4PSIxMjkuMDUiIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0zOTAuMDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L3J1bi9jdXJyZW50JiM0NTtzeXN0ZW0vc3c8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTM3Mi44MSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4oc3lzdGVtIHN3KTwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9wYXRoIC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNzPSJub2RlIj4KPHRpdGxlPnN5c3RlbV9wYXRoPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0yNzIuNzYiIHJ4PSIzMjUuMjciIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0yNzYuNzEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9mYmRtMnY2cjc4dzNuMGE3Zjc4cGJuamR3cGR3aTEyeCYjNDU7c3lzdGVtJiM0NTtwYXRoPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0yNTkuNDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KHN5c3RlbSYjNDU7cGF0aCk8L3RleHQ+CjwvZz4KPCEtLSBydW5fY3VycmVudF9zeXN0ZW0mIzQ1OyZndDtzeXN0ZW1fcGF0aCAtLT4KPGcgaWQ9ImVkZ2UxIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5ydW5fY3VycmVudF9zeXN0ZW0mIzQ1OyZndDtzeXN0ZW1fcGF0aDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0zNzcsLTM1NS41N0MzNzcsLTM0Mi44OCAzNzcsLTMyNy44NiAzNzcsLTMxNC4xNyIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODAuNSwtMzE0LjU3IDM3NywtMzA0LjU3IDM3My41LC0zMTQuNTcgMzgwLjUsLTMxNC41NyIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0MDQuNzUiIHk9Ii0zMjQuNzYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3ltbGluazwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9iaW5fZ2l0IC0tPgo8ZyBpZD0ibm9kZTMiIGNsYXNzPSJub2RlIj4KPHRpdGxlPnN5c3RlbV9iaW5fZ2l0PC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0xNTkuNDEiIHJ4PSIxNzAuOTQiIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0xNjMuMzYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9mYmRtMi4uLi9iaW4vZ2l0PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0xNDYuMTEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+4oaSIC9uaXgvc3RvcmUvZ3o5YTl2Li4uJiM0NTtnaXQvYmluL2dpdDwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9wYXRoJiM0NTsmZ3Q7c3lzdGVtX2Jpbl9naXQgLS0+CjxnIGlkPSJlZGdlMiIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+c3lzdGVtX3BhdGgmIzQ1OyZndDtzeXN0ZW1fYmluX2dpdDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0zNzcsLTI0Mi4yMUMzNzcsLTIyOS41MyAzNzcsLTIxNC41IDM3NywtMjAwLjgxIi8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM4MC41LC0yMDEuMjIgMzc3LC0xOTEuMjIgMzczLjUsLTIwMS4yMiAzODAuNSwtMjAxLjIyIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzNyIgeT0iLTIxMS40MSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5jb250YWlucyBzeW1saW5rPC90ZXh0Pgo8L2c+CjwhLS0gc3RvcmVfZ2l0MiAtLT4KPGcgaWQ9Im5vZGU0IiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5zdG9yZV9naXQyPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii00Ni4wNSIgcng9IjM2MS4zMyIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTUwIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPi9uaXgvc3RvcmUvZ3o5YTl2dngxNWN3em56dzJoMWdyNGs3Nzc4YmJncWsmIzQ1O2ZpcmVqYWlsJiM0NTt3cmFwL2Jpbi9naXQ8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTMyLjc1IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPihzdG9yZSBwYXRoKTwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9iaW5fZ2l0JiM0NTsmZ3Q7c3RvcmVfZ2l0MiAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5zeXN0ZW1fYmluX2dpdCYjNDU7Jmd0O3N0b3JlX2dpdDI8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMzc3LC0xMjguODZDMzc3LC0xMTYuMTcgMzc3LC0xMDEuMTUgMzc3LC04Ny40NiIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODAuNSwtODcuODcgMzc3LC03Ny44NyAzNzMuNSwtODcuODcgMzgwLjUsLTg3Ljg3Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQwNC43NSIgeT0iLTk4LjA1IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnN5bWxpbms8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K" /></p>
+
+<h2 id="the-why--conclusion">The Why &amp; Conclusion</h2>
+
+<p>As we observed in the previous example, the profile is a chain of symlinks whose destinations are store paths in the Nix store. The fact that we can simply switch applications by modifying the symlinks means that, if we later want to revert to an older version of an arbitrary package, say because it broke, all we have to do is make the symlinks point to the old store paths! And that’s precisely what your NixOS system does—automatically manages profiles and the Nix “generations” that you see upon system initialization.</p>
+
+<p>The store path has the version of the package to help distinguish between new and old versions, and the random letters that you see in front of its name (in this case, <code class="language-plaintext highlighter-rouge">fbdm2v6r78w3n0a7f78pbnjdwpdwi12x</code>) is called the <em>store path hash</em>. If two store paths in the Nix store were to have the same name and version, then this random string of letters that gets generated through a mathematical process ensures that they do not conflict. The combination of these three attributes makes up the store path, and this is why the Nix store is called <em>content-addressed</em>.</p>
+
+<p>Obviously, if we modify an existing store path, that could break the link between the derivation, but also make future reverts unreliable. This is why you are not allowed to edit it. The property is called <em>immutability</em>.</p>
+
+<p>Lastly, the reason derivations are the way they are is they orchestrate all of the store paths and provide them all the necessary dependencies. We saw the inner details of how they achieve this in the first example.</p>
+
+<p>And this concludes our witchhunt! We have seen how all of these little things are interconnected in the ecosystem, and you have learned the fundamentals of this complex monolith called the Nix store. I leave the traversal of the user profile located in <code class="language-plaintext highlighter-rouge">~/.nix-profile</code> as an exercise to the reader.</p>
+
+<p>To summarize everything that I demonstrated, below is a cheatsheet of the commands and material introduced above.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --outputs &lt;derivation&gt;</code>: fetch the store paths associated with a derivation</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --deriver &lt;store-path&gt;</code>: fetch the derivation that a store path originates from</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --realize &lt;derivation&gt;</code>: build (realise) a derivation; create store paths from outputs</li>
+  <li><code class="language-plaintext highlighter-rouge">nix derivation show &lt;derivation&gt;</code>: inspect a derivation in human-readable JSON form</li>
+  <li><code class="language-plaintext highlighter-rouge">/run/current-system</code>: the NixOS system profile; same as <code class="language-plaintext highlighter-rouge">/nix/var/nix/profiles/system</code></li>
+  <li><code class="language-plaintext highlighter-rouge">~/.nix-profile</code>: the NixOS user profile</li>
+</ul>
+
+<p>Here are some bonus commands that were not needed but very useful in day-to-day store operation:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --referrers &lt;store-path&gt;</code>: see what references a store path</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --roots</code>: roots of a store path</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --graph</code>: produce a neat Graphviz DOT representation of a dependency graph for a package</li>
+</ul>
+
+<p>For further reading, I suggest looking into the official NixOS documentation.</p>
+
+<h2 id="bonus-garbage-collection">Bonus: Garbage Collection</h2>
+
+<p>Ever wondered how the Nix store is able to know which store paths need to be deleted? In case you weren’t aware, garbage collection allows us to delete old store paths by running <code class="language-plaintext highlighter-rouge">nix-collect-garbage -d</code>.</p>
+
+<p>So far, we know that the relation is essentially profile ↔ store ↔ deriver. As it was explained before, store paths are immutable by design. Garbage collection simply identifies every store path that is not reachable from a set of GC roots, and deletes them.</p>
+
+<p>Since every profile generation in <code class="language-plaintext highlighter-rouge">~/.nix-profile</code> is considered a root in and of itself, as long as it exists, these store paths that we saw are considered new. If you build a new generation, the old generations still exist until you delete them or they get automatically deleted, so their store paths are still referenced. In other words, if you want old packages actually removed, you must remove or prune those old generations and then run the garbage collector.</p>]]></content><author><name>Quarterstar</name></author><category term="nix" /><summary type="html"><![CDATA[Learn how to operate on the Nix Store commands like a professional user. See how the commands relate to its functionality.]]></summary></entry></feed>

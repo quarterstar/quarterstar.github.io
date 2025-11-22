@@ -1,0 +1,56 @@
+.brush-hl { line-height: 1.05; }
+
+.brush-ink {
+  --brush-color: #ffeb3b;
+  --brush-angle: -2deg;
+  --brush-height: 0.8em;
+  position: relative;
+  display: inline-block;
+  z-index: 0;
+}
+
+.brush-ink::before {
+  content: "";
+  position: absolute;
+  left: -0.25ch;
+  right: -0.25ch;
+  top: 50%;
+  transform: translateY(-50%) rotate(var(--brush-angle));
+  height: var(--brush-height);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.95;
+
+  background-color: var(--brush-color); /* color comes from variable */
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  /* Use the SVG as a mask */
+  mask-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40' preserveAspectRatio='none'>\
+  <filter id='f'><feTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>\
+    <feDisplacementMap in='SourceGraphic' scale='8'/>\
+  </filter>\
+  <rect x='0' y='0' width='100%' height='100%' rx='10' fill='white' filter='url(%23f)' />\
+</svg>");
+  mask-repeat: no-repeat;
+  mask-size: cover;
+
+  -webkit-mask-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 40' preserveAspectRatio='none'>\
+  <filter id='f'><feTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>\
+    <feDisplacementMap in='SourceGraphic' scale='8'/>\
+  </filter>\
+  <rect x='0' y='0' width='100%' height='100%' rx='10' fill='white' filter='url(%23f)' />\
+</svg>");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: cover;
+}
+
+/* Optional: slightly blend the stroke with background color for a marker feel */
+.brush-ink { mix-blend-mode: multiply; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .brush-ink::before { transform: translateY(-50%); }
+}

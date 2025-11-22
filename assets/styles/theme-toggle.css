@@ -1,0 +1,162 @@
+/* mobile */
+
+:root {
+  --toggle-lamp-base: #444;
+  --toggle-lamp-bulb: #6b7280;
+}
+html.dark-mode {
+  --toggle-lamp-base: #ffd54a;
+  --toggle-lamp-bulb: #ffd54a;
+}
+
+#theme-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  line-height: 0;
+}
+
+#theme-toggle:focus {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+#theme-toggle svg { width: 24px; height: 24px; display: block; }
+
+#theme-toggle .bulb { transition: fill .18s ease, transform .18s ease; transform-origin: center; }
+html.dark-mode #theme-toggle .bulb { transform: scale(1.05); }
+
+@media (min-width: 900px) {
+  #theme-toggle {
+    display: none;
+  }
+}
+
+/* pc */
+
+:root{
+  --pc-track-bg: #e6e7eb;
+  /*--pc-track-bg-active: #3b82f6;*/
+  --pc-track-bg-active: #58a6ff;
+  --pc-knob: #fff;
+  --pc-label: #111827;
+  --pc-track-width: 50px; /* used for knob translation math */
+  --pc-track-height: 28px;
+  --pc-track-padding: 3px;
+  --pc-knob-size: 22px;
+}
+html.dark-mode{
+  --pc-track-bg: #374151;
+  /*--pc-track-bg-active: #ffd54a;*/
+  --pc-track-bg-active: #58a6ff;
+  --pc-knob: #111827;
+  --pc-label: #fff;
+}
+
+/* Base button (flexbox everywhere) */
+#theme-toggle-pc{
+  background: none;
+  border: none;
+  padding: 6px;
+  margin: 0;
+  cursor: pointer;
+  display: none;                 /* hidden on mobile */
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  line-height: 0;
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+/* visible at desktop widths */
+@media (min-width: 900px){
+  #theme-toggle-pc{ display: inline-flex; }
+  /* hide the mobile toggle at same breakpoint (your original already does that) */
+}
+
+/* focus style (keyboard accessible) */
+#theme-toggle-pc:focus{
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+#theme-toggle-pc:focus-visible{
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+}
+
+/* track: a flex container so knob can align nicely */
+#theme-toggle-pc .track{
+  display: flex;
+  align-items: center;
+  width: var(--pc-track-width);
+  height: var(--pc-track-height);
+  padding: var(--pc-track-padding);
+  border-radius: 999px;
+  background: var(--pc-track-bg);
+  box-sizing: border-box;
+  transition: background .18s ease, box-shadow .18s ease;
+  flex-shrink: 0;
+}
+
+/* knob */
+#theme-toggle-pc .knob{
+  width: var(--pc-knob-size);
+  height: var(--pc-knob-size);
+  border-radius: 50%;
+  background: var(--pc-knob);
+  transform: translateX(0);
+  transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,.18);
+  will-change: transform;
+}
+
+/* compute translation: track width - knob width - padding*2 */
+/* for the used numbers this equals 50 - 22 - 6 = 22px */
+#theme-toggle-pc[aria-checked="true"] .knob{
+  transform: translateX(calc(var(--pc-track-width) - var(--pc-knob-size) - (var(--pc-track-padding) * 2)));
+}
+
+/* active track color */
+#theme-toggle-pc[aria-checked="true"] .track{
+  background: var(--pc-track-bg-active);
+}
+
+/* labels (flex column for neat alignment if added elsewhere) */
+#theme-toggle-pc .labels{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 28px;
+}
+
+#theme-toggle-pc .label{
+  font-size: 13px;
+  line-height: 1;
+  color: var(--pc-label);
+  user-select: none;
+}
+
+/* show only the correct label */
+#theme-toggle-pc .label-on{ display: none; }
+#theme-toggle-pc[aria-checked="true"] .label-on{ display: block; }
+#theme-toggle-pc[aria-checked="true"] .label-off{ display: none; }
+
+/* reduced motion preference */
+@media (prefers-reduced-motion: reduce){
+  #theme-toggle-pc .knob,
+  #theme-toggle-pc .track { transition: none; }
+}
+
+@media (max-width: 899px) {
+  #theme-toggle-pc {
+    display: none;
+  }
+}
