@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+
+    <link rel="preload" href="/assets/fonts/DejaVuSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ArchivoBlack-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/NotoSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<link rel="preconnect" href="https://groot.mailerlite.com" crossorigin>
+<link rel="preconnect" href="https://utteranc.es" crossorigin>
+
+    <link 
+  rel="preload" 
+  as="image" 
+  href="/assets/images/backgrounds/surveillance-01.webp" 
+  fetchpriority="high"
+>
+
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="description" content="Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.">
+
+
+    <link rel="canonical" href="https://www.quarterstar.tech/pages/articles/" />
+    <meta property="og:title" content="">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="">
+
+    <title>Quarterstar - Articles</title>
+
+    <!-- Monkey patch -->
+<!-- <script type="text/javascript"> -->
+<!-- (() => { -->
+<!--     // 1. Function to apply attributes to the script element -->
+<!--     const patchScript = (el) => { -->
+<!--         if (el && el.tagName === 'SCRIPT' && el.src && el.src.includes('mlcdn.com')) { -->
+<!--             el.setAttribute('defer', ''); -->
+<!--             el.defer = true; -->
+<!--             // dynamic scripts are async by default; setting to false forces 'defer' behavior -->
+<!--             el.async = false; --> 
+<!--         } -->
+<!--     }; -->
+
+<!--     // Intercept setAttribute -->
+<!--     const originalSetAttribute = Element.prototype.setAttribute; -->
+<!--     Element.prototype.setAttribute = function(name, value) { -->
+<!--         originalSetAttribute.apply(this, arguments); -->
+<!--         if (name === 'src') patchScript(this); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (appendChild) -->
+<!--     const originalAppendChild = Node.prototype.appendChild; -->
+<!--     Node.prototype.appendChild = function(newNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalAppendChild.apply(this, arguments); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (insertBefore) -->
+<!--     const originalInsertBefore = Node.prototype.insertBefore; -->
+<!--     Node.prototype.insertBefore = function(newNode, referenceNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalInsertBefore.apply(this, arguments); -->
+<!--     }; -->
+<!-- })(); -->
+<!-- </script> -->
+
+<!-- <!-1- Critical CSS: Essential for initial layout and basic content visibility -1-> -->
+<!-- NOTE: This file should be kept minimal and most code that needs to be loaded sequentially should be async instead. -->
+
+<!-- Article -->
+<!-- Prevent the mobile navbar from appearing for a split second when loading the page (even on PCs) -->
+
+<style>
+  .nav-drawer {
+    transform: translateX(100%);
+  }
+</style>
+
+
+<!-- <!-1- Async CSS: High priority UI components and global utilities -1-> -->
+
+
+<link rel="preload" href="/assets/styles/async-bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/styles/async-bundle.css"></noscript>
+
+
+<!-- Defer CSS: Non-critical, interactive, or below-the-fold styles -->
+
+
+<link
+  rel="stylesheet"
+  href="/assets/styles/deferred-bundle.css"
+  
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href="/assets/styles/deferred-bundle.css"
+    >
+</noscript>
+
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.quarterstar.tech/pages/articles/">
+<meta property="og:title" content="Quarterstar - Articles">
+<meta property="og:description" content="Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.">
+<meta property="og:image" content="https://www.quarterstar.tech">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:title" content="Quarterstar - Articles">
+
+
+
+
+<link
+  rel="stylesheet"
+  href=""
+  id="hljs-theme"
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href=""
+    id="hljs-theme-fallback">
+</noscript>
+
+
+<script>
+  (function() {
+    try {
+      const darkClass = 'dark-mode';
+      const stored = localStorage.getItem('site-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if(stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add(darkClass);
+      }
+    } catch(e) {}
+  })();
+</script>
+
+
+<!-- TODO (MOVE) -->
+<script>
+  function ml_webform_success_32409238() {
+    var $ = ml_jQuery || jQuery;
+    $('.ml-subscribe-form-32409238 .row-success').show();
+    $('.ml-subscribe-form-32409238 .row-form').hide();
+  }
+</script>
+<!-- <script src="https://groot.mailerlite.com/js/w/webforms.min.js?v176e10baa5e7ed80d35ae235be3d5024" type="text/javascript" defer></script> -->
+<script src="/assets/external-scripts/mailerlite-webform.js" type="text/javascript" defer></script>
+
+
+  </head>
+  <body data-barba="wrapper">
+    <header class="header">
+  <nav id="desktop-nav" class="desktop-nav">
+    <div class="brand-btns">
+      <div id="brand">
+        <a href="https://github.com/quarterstar" class="logo" aria-label="Visit my GitHub profile">
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quarterstar Logo Animation</title>
+  <style>
+    #quarterstar {
+      width: 256px;
+      height: 256px;
+      border-radius: 10px;
+    }
+
+    #q-rotations > * {
+      transition: opacity 200ms linear;
+    }
+    #q-rotations .hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <svg id="quarterstar" viewBox="0 0 256 256" width="256px" height="256px" xmlns="http://www.w3.org/2000/svg">
+    <style>
+      #q-rotations > * {
+        transition: opacity 200ms linear;
+      }
+
+      #orig-q, #q-rotations text {
+        /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;*/
+        font-family: "Noto Sans Regular";
+      }
+
+      #q-rotations .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #q-rotations text {
+        font-family: "Noto Sans Regular";
+      }
+    </style>
+
+    <g id="layer1">
+      <circle style="fill:#515151;stroke-width:5.06729;fill-opacity:1" cx="128" cy="128" r="128" />
+      
+      <!-- Rotated Q copies -->
+      <g id="q-rotations">
+        <text transform="rotate(-15 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+        <text transform="rotate(-30 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-45 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-60 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-75 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-90 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-105 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-120 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-135 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-150 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-165 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-180 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2;">Q</text>
+        <text transform="rotate(-195 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-210 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-225 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-240 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-255 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-270 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-285 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-300 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-315 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-330 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-345 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+      </g>
+
+      <!-- Original top Q (fully visible) -->
+      <text id="orig-q" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:1;">Q</text>
+    </g>
+
+    <g id="center-asterisk-group" transform="translate(128 128)">
+  <text id="center-asterisk"
+        x="0" y="0"
+        text-anchor="middle"
+        dominant-baseline="central"
+        style="font-size:28px;fill:#ffffff;pointer-events:none;">
+    *
+  </text>
+</g>
+  </svg>
+</body>
+</html>
+
+        </a>
+        <div id="brand-info">
+          <p class="brand-name">Q*</p>
+          <p class="brand-desc">Defending offensively.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pc-buttons">
+      <button id="theme-toggle-pc"
+        role="switch"
+        aria-label="Toggle dark mode"
+        aria-checked="false"
+        title="Toggle dark mode">
+  <span class="track" aria-hidden="true">
+    <span class="knob" aria-hidden="true"></span>
+  </span>
+
+  <!-- visual text (kept simple and flex-based) -->
+  <span class="labels" aria-hidden="true">
+    <span class="label label-off">Off</span>
+    <span class="label label-on">On</span>
+  </span>
+</button>
+
+      <ul class="nav-links">
+        <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+      </ul>
+    </div>
+    <div class="mobile-buttons">
+      <button id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6.5c0-.83.67-1.5 1.5-1.5h3c.83 0 1.5.67 1.5 1.5v.8H9v-.8z"
+          fill="var(--toggle-lamp-base)"/>
+    <circle class="bulb" cx="12" cy="11" r="3" fill="var(--toggle-lamp-bulb)"/>
+    <rect x="11" y="14" width="2" height="3" fill="var(--toggle-lamp-base)"/>
+    <rect x="8" y="18" width="8" height="1.2" rx="0.6" fill="var(--toggle-lamp-base)"/>
+  </svg>
+</button>
+
+      <button class="menu-btn" id="menuBtn" aria-controls="navDrawer" aria-expanded="false" aria-label="Open navigation">
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="overlay" id="overlay" tabindex="-1" aria-hidden="true"></div>
+
+<nav id="navDrawer" class="nav-drawer" aria-hidden="true" inert>
+  <!-- <button class="drawer-close" id="drawerClose" aria-label="Close navigation">✕</button> -->
+  <button class="drawer-close" id="drawerClose" aria-label="Close navigation">
+    <span aria-hidden="true">✕</span>
+  </button>
+  <h2 style="margin:6px 0 18px;">Menu</h2>
+  <ul>
+    <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+  </ul>
+</nav>
+
+
+    <div id="canvas-holder" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 99;"></div>
+
+    <div id="smooth-wrapper">
+      <div id="smooth-content">
+        <main data-barba="container" data-barba-namespace="default">
+          <section>
+  <div class="graph-card articles-header" id="demo-graph">
+    <canvas class="graph-bg" aria-hidden="true"></canvas>
+    <div class="graph-content">
+      <h1>Quarterstar Article Index</h1>
+      <p>RESEARCH AND DEVELOPMENT</p>
+    </div>
+  </div>
+  <p>📬 Want a dose of my articles in your inbox? <a href="/pages/unimplemented">Subscribe to my newsletter for free</a>.</p>
+
+
+  <ul class="articles-list no-list-bullet">
+    
+      
+      
+      <li class="selectable-box animate-target">
+        
+
+
+<a class="article-link wobbly-target" class="article-link" href="/articles/rust-to-cpp-implementing-the-question-mark-operator/">
+  <div class="article-content">
+    <div class="article-body">
+      <div>
+        <h2>Rust to C++: Implementing The Question Mark Operator</h2>
+        <p>C++ may not be Rust, but perhaps we can learn a thing or two from how it does certain things?</p>
+      </div>
+    </div>
+    <div class="article-footer">
+      <p>March 30, 2026</p>
+      
+
+35 minutes to read
+
+
+    </div>
+  </div>
+
+  <div class="article-author">
+    <img src="/assets/images/icons/quarterstar.svg" width="128" height="128" alt="Quarterstar" />
+    <p>Quarterstar</p>
+  </div>
+</a>
+
+      </li>
+    
+      
+      
+      <li class="selectable-box animate-target">
+        
+
+
+<a class="article-link wobbly-target" class="article-link" href="/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/">
+  <div class="article-content">
+    <div class="article-body">
+      <div>
+        <h2>The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond</h2>
+        <p></p>
+      </div>
+    </div>
+    <div class="article-footer">
+      <p>December 22, 2025</p>
+      
+
+60 minutes to read
+
+
+    </div>
+  </div>
+
+  <div class="article-author">
+    <img src="/assets/images/icons/quarterstar.svg" width="128" height="128" alt="Quarterstar" />
+    <p>Quarterstar</p>
+  </div>
+</a>
+
+      </li>
+    
+      
+      
+      <li class="selectable-box animate-target">
+        
+
+
+<a class="article-link wobbly-target" class="article-link" href="/articles/template-specialization-and-concepts-in-cpp/">
+  <div class="article-content">
+    <div class="article-body">
+      <div>
+        <h2>Template Specialization & Concepts in C++</h2>
+        <p>New C++23 feature known as concepts presents new compile-time opportunities</p>
+      </div>
+    </div>
+    <div class="article-footer">
+      <p>November 21, 2025</p>
+      
+
+12 minutes to read
+
+
+    </div>
+  </div>
+
+  <div class="article-author">
+    <img src="/assets/images/icons/quarterstar.svg" width="128" height="128" alt="Quarterstar" />
+    <p>Quarterstar</p>
+  </div>
+</a>
+
+      </li>
+    
+      
+      
+      <li class="selectable-box animate-target">
+        
+
+
+<a class="article-link wobbly-target" class="article-link" href="/articles/understanding-the-nix-store-by-hunting-packages-down/">
+  <div class="article-content">
+    <div class="article-body">
+      <div>
+        <h2>Understanding the Nix Store by Hunting Packages Down</h2>
+        <p>Learn how to operate on the Nix Store commands like a professional user. See how the commands relate to its functionality.</p>
+      </div>
+    </div>
+    <div class="article-footer">
+      <p>October 26, 2025</p>
+      
+
+15 minutes to read
+
+
+    </div>
+  </div>
+
+  <div class="article-author">
+    <img src="/assets/images/icons/quarterstar.svg" width="128" height="128" alt="Quarterstar" />
+    <p>Quarterstar</p>
+  </div>
+</a>
+
+      </li>
+    
+  </ul>
+</section>
+
+        </main>
+
+        <footer>
+          <p>&copy; 1970–2026 Quarterstar, All Rights Reserved.</p>
+
+        </footer>
+      </div>
+    </div>
+
+    <script type="module" src="/assets/scripts/bundle.js"></script>
+
+  </body>
+</html>

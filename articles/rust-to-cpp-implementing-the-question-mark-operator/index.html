@@ -1,0 +1,1311 @@
+
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+
+    <link rel="preload" href="/assets/fonts/DejaVuSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ArchivoBlack-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/NotoSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<link rel="preconnect" href="https://groot.mailerlite.com" crossorigin>
+<link rel="preconnect" href="https://utteranc.es" crossorigin>
+
+    <link 
+  rel="preload" 
+  as="image" 
+  href="/assets/images/backgrounds/surveillance-01.webp" 
+  fetchpriority="high"
+>
+
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="description" content="C++ may not be Rust, but perhaps we can learn a thing or two from how it does certain things?">
+
+
+    <link rel="canonical" href="https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator/" />
+    <meta property="og:title" content="">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="">
+
+    <title>Rust to C++: Implementing The Question Mark Operator</title>
+
+    <!-- Monkey patch -->
+<!-- <script type="text/javascript"> -->
+<!-- (() => { -->
+<!--     // 1. Function to apply attributes to the script element -->
+<!--     const patchScript = (el) => { -->
+<!--         if (el && el.tagName === 'SCRIPT' && el.src && el.src.includes('mlcdn.com')) { -->
+<!--             el.setAttribute('defer', ''); -->
+<!--             el.defer = true; -->
+<!--             // dynamic scripts are async by default; setting to false forces 'defer' behavior -->
+<!--             el.async = false; --> 
+<!--         } -->
+<!--     }; -->
+
+<!--     // Intercept setAttribute -->
+<!--     const originalSetAttribute = Element.prototype.setAttribute; -->
+<!--     Element.prototype.setAttribute = function(name, value) { -->
+<!--         originalSetAttribute.apply(this, arguments); -->
+<!--         if (name === 'src') patchScript(this); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (appendChild) -->
+<!--     const originalAppendChild = Node.prototype.appendChild; -->
+<!--     Node.prototype.appendChild = function(newNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalAppendChild.apply(this, arguments); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (insertBefore) -->
+<!--     const originalInsertBefore = Node.prototype.insertBefore; -->
+<!--     Node.prototype.insertBefore = function(newNode, referenceNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalInsertBefore.apply(this, arguments); -->
+<!--     }; -->
+<!-- })(); -->
+<!-- </script> -->
+
+<!-- <!-1- Critical CSS: Essential for initial layout and basic content visibility -1-> -->
+<!-- NOTE: This file should be kept minimal and most code that needs to be loaded sequentially should be async instead. -->
+
+<!-- Article -->
+<!-- Prevent the mobile navbar from appearing for a split second when loading the page (even on PCs) -->
+
+<style>
+  .nav-drawer {
+    transform: translateX(100%);
+  }
+</style>
+
+
+<!-- <!-1- Async CSS: High priority UI components and global utilities -1-> -->
+
+
+<link rel="preload" href="/assets/styles/async-bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/styles/async-bundle.css"></noscript>
+
+
+<!-- Defer CSS: Non-critical, interactive, or below-the-fold styles -->
+
+
+<link
+  rel="stylesheet"
+  href="/assets/styles/deferred-bundle.css"
+  
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href="/assets/styles/deferred-bundle.css"
+    >
+</noscript>
+
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator/">
+<meta property="og:title" content="Rust to C++: Implementing The Question Mark Operator">
+<meta property="og:description" content="C++ may not be Rust, but perhaps we can learn a thing or two from how it does certain things?">
+<meta property="og:image" content="https://www.quarterstar.tech">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:title" content="Rust to C++: Implementing The Question Mark Operator">
+
+
+
+
+<link
+  rel="stylesheet"
+  href=""
+  id="hljs-theme"
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href=""
+    id="hljs-theme-fallback">
+</noscript>
+
+
+<script>
+  (function() {
+    try {
+      const darkClass = 'dark-mode';
+      const stored = localStorage.getItem('site-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if(stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add(darkClass);
+      }
+    } catch(e) {}
+  })();
+</script>
+
+
+<!-- TODO (MOVE) -->
+<script>
+  function ml_webform_success_32409238() {
+    var $ = ml_jQuery || jQuery;
+    $('.ml-subscribe-form-32409238 .row-success').show();
+    $('.ml-subscribe-form-32409238 .row-form').hide();
+  }
+</script>
+<!-- <script src="https://groot.mailerlite.com/js/w/webforms.min.js?v176e10baa5e7ed80d35ae235be3d5024" type="text/javascript" defer></script> -->
+<script src="/assets/external-scripts/mailerlite-webform.js" type="text/javascript" defer></script>
+
+
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Rust to C++: Implementing The Question Mark Operator",
+  "datePublished": "2026-03-30T00:00:00+02:00",
+  "author": [{
+      "@type": "Person",
+      "name": "Quarterstar",
+      "url": "https://github.com/quarterstar"
+    }]
+}
+</script>
+
+  </head>
+  <body data-barba="wrapper">
+    <header class="header">
+  <nav id="desktop-nav" class="desktop-nav">
+    <div class="brand-btns">
+      <div id="brand">
+        <a href="https://github.com/quarterstar" class="logo" aria-label="Visit my GitHub profile">
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quarterstar Logo Animation</title>
+  <style>
+    #quarterstar {
+      width: 256px;
+      height: 256px;
+      border-radius: 10px;
+    }
+
+    #q-rotations > * {
+      transition: opacity 200ms linear;
+    }
+    #q-rotations .hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <svg id="quarterstar" viewBox="0 0 256 256" width="256px" height="256px" xmlns="http://www.w3.org/2000/svg">
+    <style>
+      #q-rotations > * {
+        transition: opacity 200ms linear;
+      }
+
+      #orig-q, #q-rotations text {
+        /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;*/
+        font-family: "Noto Sans Regular";
+      }
+
+      #q-rotations .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #q-rotations text {
+        font-family: "Noto Sans Regular";
+      }
+    </style>
+
+    <g id="layer1">
+      <circle style="fill:#515151;stroke-width:5.06729;fill-opacity:1" cx="128" cy="128" r="128" />
+      
+      <!-- Rotated Q copies -->
+      <g id="q-rotations">
+        <text transform="rotate(-15 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+        <text transform="rotate(-30 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-45 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-60 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-75 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-90 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-105 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-120 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-135 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-150 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-165 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-180 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2;">Q</text>
+        <text transform="rotate(-195 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-210 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-225 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-240 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-255 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-270 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-285 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-300 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-315 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-330 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-345 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+      </g>
+
+      <!-- Original top Q (fully visible) -->
+      <text id="orig-q" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:1;">Q</text>
+    </g>
+
+    <g id="center-asterisk-group" transform="translate(128 128)">
+  <text id="center-asterisk"
+        x="0" y="0"
+        text-anchor="middle"
+        dominant-baseline="central"
+        style="font-size:28px;fill:#ffffff;pointer-events:none;">
+    *
+  </text>
+</g>
+  </svg>
+</body>
+</html>
+
+        </a>
+        <div id="brand-info">
+          <p class="brand-name">Q*</p>
+          <p class="brand-desc">Defending offensively.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pc-buttons">
+      <button id="theme-toggle-pc"
+        role="switch"
+        aria-label="Toggle dark mode"
+        aria-checked="false"
+        title="Toggle dark mode">
+  <span class="track" aria-hidden="true">
+    <span class="knob" aria-hidden="true"></span>
+  </span>
+
+  <!-- visual text (kept simple and flex-based) -->
+  <span class="labels" aria-hidden="true">
+    <span class="label label-off">Off</span>
+    <span class="label label-on">On</span>
+  </span>
+</button>
+
+      <ul class="nav-links">
+        <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+      </ul>
+    </div>
+    <div class="mobile-buttons">
+      <button id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6.5c0-.83.67-1.5 1.5-1.5h3c.83 0 1.5.67 1.5 1.5v.8H9v-.8z"
+          fill="var(--toggle-lamp-base)"/>
+    <circle class="bulb" cx="12" cy="11" r="3" fill="var(--toggle-lamp-bulb)"/>
+    <rect x="11" y="14" width="2" height="3" fill="var(--toggle-lamp-base)"/>
+    <rect x="8" y="18" width="8" height="1.2" rx="0.6" fill="var(--toggle-lamp-base)"/>
+  </svg>
+</button>
+
+      <button class="menu-btn" id="menuBtn" aria-controls="navDrawer" aria-expanded="false" aria-label="Open navigation">
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="overlay" id="overlay" tabindex="-1" aria-hidden="true"></div>
+
+<nav id="navDrawer" class="nav-drawer" aria-hidden="true" inert>
+  <!-- <button class="drawer-close" id="drawerClose" aria-label="Close navigation">✕</button> -->
+  <button class="drawer-close" id="drawerClose" aria-label="Close navigation">
+    <span aria-hidden="true">✕</span>
+  </button>
+  <h2 style="margin:6px 0 18px;">Menu</h2>
+  <ul>
+    <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+  </ul>
+</nav>
+
+    
+    <div id="canvas-holder" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 99;"></div>
+
+    <div id="main-content" data-barba="container" data-barba-namespace="article">
+      <div class="reading-progress" aria-hidden="false">
+  <div id="reading-progress-bar"
+       class="reading-progress__bar"
+       role="progressbar"
+       aria-valuemin="0"
+       aria-valuemax="100"
+       aria-valuenow="0"
+       aria-label="Reading progress">
+  </div>
+</div>
+
+
+
+      <template id="sidebar-left-template">
+        <aside id="sidebar-left">
+        </aside>
+      </template>
+      <div id="sidebar-left-container"></div>
+
+      <main>
+        <div class="article-header">
+          <h1 class="article-title">Rust to C++: Implementing The Question Mark Operator</h1>
+          <span class="post-date">March 30, 2026</span>
+          <br>
+          <span>Written by Quarterstar</span>
+          <br>
+          
+
+35 minutes to read
+
+
+          <br>
+
+          <p id="tip-of-day" class="tip-of-day">Loading tip...</p>
+        </div>
+
+        
+
+<aside class="recommended-articles">
+<strong>You may also like</strong>
+<ul>
+  
+    <li>
+      <a href="/articles/template-specialization-and-concepts-in-cpp">Template Specialization & Concepts in C++</a>
+      <small class="muted">(Nov 21, 2025)</small>
+    </li>
+  
+    <li>
+      <a href="/articles/understanding-the-nix-store-by-hunting-packages-down">Understanding the Nix Store by Hunting Packages Down</a>
+      <small class="muted">(Oct 26, 2025)</small>
+    </li>
+  
+</ul>
+</aside>
+
+
+
+        
+        
+          <nav id="table-of-contents" aria-label="Table of Contents">
+            <h2>Table of Contents</h2>
+            <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h2"><a href="#introduction">Introduction</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#why-does-it-exist-in-rust">Why does it exist in Rust?</a></li>
+<li class="toc-entry toc-h3"><a href="#whats-wrong-with-the-current-approaches-of-c">What’s wrong with the current approaches of C++?</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#the-implementation">The implementation</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#can-we-use-iife">Can we use IIFE?</a></li>
+<li class="toc-entry toc-h3"><a href="#can-we-use-goto">Can we use goto?</a></li>
+<li class="toc-entry toc-h3"><a href="#so-what-even-remains-for-us-to-consider">So what even remains for us to consider?</a></li>
+<li class="toc-entry toc-h3"><a href="#the-smaller-pillar">The smaller pillar</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#explanation">Explanation</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h3"><a href="#the-larger-pillar">The larger pillar</a></li>
+<li class="toc-entry toc-h3"><a href="#lambda-support">Lambda support</a></li>
+<li class="toc-entry toc-h3"><a href="#important-edge-cases">Important edge cases</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#adding-stdunexpected-if-missing">Adding std::unexpected if missing</a></li>
+<li class="toc-entry toc-h4"><a href="#avoiding-dereference-of-void">Avoiding dereference of void</a></li>
+<li class="toc-entry toc-h4"><a href="#nested-uses-of-maybe-expressions">Nested uses of maybe expressions</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h3"><a href="#some-conveniences">Some conveniences</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#the-turing-test">The Turing Test</a></li>
+<li class="toc-entry toc-h2"><a href="#going-forward">Going forward</a></li>
+<li class="toc-entry toc-h2"><a href="#handy-tips">Handy tips</a></li>
+<li class="toc-entry toc-h2"><a href="#full-code">Full code</a></li>
+<li class="toc-entry toc-h2"><a href="#additional-notes--honorable-mentions">Additional notes &amp; honorable mentions</a></li>
+</ul>
+          </nav>
+        
+
+        <article id="reveal-content">
+          <h2 id="introduction">Introduction</h2>
+
+<p>One of the most important quality-of-life features coming from Rust, for me, that is missing from C++, is the <code class="language-plaintext highlighter-rouge">?</code> operator; it is critical if you handle errors via values instead of exceptions, like many modern languages do. This article will show you how I implemented it in C++.</p>
+
+<p>This article may not be particularly suitable for C++ beginners, but I have tried to make it approachable with as much love as I’m legally allowed to give.</p>
+
+<p>The feature discussed was proposed in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2561r1.html">P2561</a> all the way back in 2022.</p>
+
+<h3 id="why-does-it-exist-in-rust">Why does it exist in Rust?</h3>
+
+<p>Instead of writing code like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">maybe_value</span><span class="p">{</span><span class="n">some_optional_or_expected</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)};</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">maybe_value</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="cm">/* .error() or nullopt or some other error */</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe_value</span><span class="p">.</span><span class="n">value</span><span class="p">()};</span>
+</code></pre></div></div>
+
+<p>If we had the same operator from Rust, we would be able to write it like this instead:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">some_optional_or_expected</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)</span><span class="o">?</span><span class="p">};</span>
+</code></pre></div></div>
+
+<p>(This is completely unrelated to the ternary operator, and <code class="language-plaintext highlighter-rouge">?</code> is used for illustration here.)</p>
+
+<p>If the optional is missing, then the <code class="language-plaintext highlighter-rouge">std::nullopt</code> is returned, and if <code class="language-plaintext highlighter-rouge">std::expected</code> has error that error is returned; otherwise, control flow continues.</p>
+
+<p>Now, the lack of this feature would be somewhat tolerable if C++ supported variable shadowing <em>within the same scope</em>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">some_optional_or_expected</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)};</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">value</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe_value</span><span class="p">.</span><span class="n">value</span><span class="p">()};</span> <span class="c1">// type changes!</span>
+</code></pre></div></div>
+
+<p>Of course, we can at least write it like this <a href="https://skebanga.github.io/if-with-initializer/">C++17’s if statement with initializer</a>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span> <span class="o">=</span> <span class="n">some_optional_or_expected</span><span class="p">();</span> <span class="o">!</span><span class="n">value</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">value</span><span class="p">.</span><span class="n">error</span><span class="p">();</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="whats-wrong-with-the-current-approaches-of-c">What’s wrong with the current approaches of C++?</h3>
+
+<p>The problem this operator solves is not being able to do this common procedure inline; this becomes very important when your entire application is based on optionals and expecteds, and it’s why Rust made the operator.</p>
+
+<p>In addition, something that Rust doesn’t have with <code class="language-plaintext highlighter-rouge">?</code> is being able to return a modified error type within the same operator. This is something I actively need: if for example it is an error, you should be able to change the return type to something else, possibility looking at the error itself. (This is basically syntactic sugar for doing a chain of transformations, but covering simple cases.)</p>
+
+<p>Unfortunately, the lack of this feature is one of the many annoyances of C++ we have to deal with to the heat death of the universe, just like we cannot extend STL types to have basic string methods we have been asking for the last decade because <a href="https://brevzin.github.io/c++/2019/04/13/ufcs-history/">UFCS won’t be supported until C++53, for various reasons</a>.</p>
+
+<p>Fortunately, however, one tool comes to the rescue at the end of this insidiously obscene tunnel, as the C preprocessor is more powerful than some people think; it allows us to fully emulate this feature in C++, and on top of that, get a text dump jumpscare when you make a mistake for free. (Due to the ongoing tarriffs, error production has been reduced by 50% since last quarter.)</p>
+
+<h2 id="the-implementation">The implementation</h2>
+
+<p>Since it’s a convention in C++ to prefix the discussed practice with <code class="language-plaintext highlighter-rouge">maybe_</code>, I thought it would be fitting to name my macro <code class="language-plaintext highlighter-rouge">maybe</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)};</span>
+</code></pre></div></div>
+
+<p>(IIRC, <code class="language-plaintext highlighter-rouge">maybe</code> was a keyword in C++20 contracts that were subsequently removed, so it should be safe to use, but if you want to be safe you can add your own prefix to it; for example, in C++ the <code class="language-plaintext highlighter-rouge">co_yield</code> keyword has that name instead of <code class="language-plaintext highlighter-rouge">yield</code> for routines.)</p>
+
+<p>The reason I don’t use uppercase is because in my codebase I treat this like a primitive, just like <code class="language-plaintext highlighter-rouge">&lt;cassert&gt;</code>’s assertion macro is not uppercase. (Did you know that it’s a macro?)</p>
+
+<p>The base case is when the user simply wants to return the bad value, which is just one argument:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">expected_or_optional</span><span class="p">)};</span>
+</code></pre></div></div>
+
+<p>Now, in my case, one thing I wanted is a second argument that lets me modify the return value within the error basis:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">expected_or_optional</span><span class="p">,</span> <span class="cm">/* ??? */</span><span class="p">)};</span>
+</code></pre></div></div>
+
+<p>This could likely be avoided by using <code class="language-plaintext highlighter-rouge">and_then</code>, <code class="language-plaintext highlighter-rouge">transform</code>, but the point of this optimization is to make our syntax as compact as possible.</p>
+
+<p>For example, in the tokenization phase of a parser tool I’m developing, I needed this to return a missing component if a regular expression did not find a match (for those interested, I used a great library called <a href="https://github.com/hanickadot/compile-time-regular-expressions"><code class="language-plaintext highlighter-rouge">ctre</code></a>):</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">binary</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">search</span><span class="o">&lt;</span><span class="n">binary_pattern</span><span class="o">&gt;</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">missing_component</span><span class="p">(</span><span class="s">"binary"</span><span class="p">)))};</span>
+</code></pre></div></div>
+
+<p>I will be able to make errors that repeated in my code even smaller when C++26 compile-time reflection is implemented in compilers, but until then we have another layer to deal with.</p>
+
+<p>In other cases, I want to take the actual wrapped return value and run some expression on it that modifies it in some way. To do this, I made my macro define the intermediate <code class="language-plaintext highlighter-rouge">_maybe_macro</code> variable:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">binary</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">expected_or_optional</span><span class="p">,</span> <span class="n">expression</span><span class="p">(</span><span class="n">_maybe_error</span><span class="p">))};</span>
+</code></pre></div></div>
+
+<p>Note that the resolution of shadowing concerns with this will come packaged with the language construct that we shall use.</p>
+
+<p>So our first question is how do we even have macro overloading? The preprocessor does not let us simply define a macro with the same name twice. There is a pattern to implement it and I personally call it <em>macro routing</em>. It looks like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define GET_maybe_MACRO(_1, _2, NAME, ...) NAME
+#define maybe(...) GET_maybe_MACRO(__VA_ARGS__, maybe_2, maybe_1)(__VA_ARGS__)
+</span></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">maybe_1</code> and <code class="language-plaintext highlighter-rouge">maybe_2</code> are other macros that will be explained in a moment. The <code class="language-plaintext highlighter-rouge">...</code> is the variadic parameter itself; it is what allows us to collect all the extra parameters we need. Since we cannot simply refer to <code class="language-plaintext highlighter-rouge">...</code> in the body, another preprocessor token was defined by the standard, <code class="language-plaintext highlighter-rouge">__VA_ARGS__</code>.</p>
+
+<p>The routing you see works by pushing the macro names to the end of the argument list, so that the <code class="language-plaintext highlighter-rouge">NAME</code> picked is the one that is last available. So suppose you call:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In that situation, the preprocessor would evaluate it (well not literally evaluate since it’s just substituting literal text) to:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">GET_maybe_MACRO</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">maybe_2</span><span class="p">,</span> <span class="n">maybe_1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So the <code class="language-plaintext highlighter-rouge">NAME</code> will be <code class="language-plaintext highlighter-rouge">maybe_1.</code> If we added another argument:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This is also fine because even though we exceed three arguments we support accepting more because variadic arguments are accepted and subsequently ignored, so we get:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">GET_maybe_MACRO</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">maybe_2</span><span class="p">,</span> <span class="n">maybe_1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So our final evaluation of <code class="language-plaintext highlighter-rouge">NAME</code> is the third argument, <code class="language-plaintext highlighter-rouge">maybe_2</code>. So that’s how the macro routing aspect works.</p>
+
+<p>Now, you may have many ideas for the implementation of <code class="language-plaintext highlighter-rouge">maybe_1</code> and <code class="language-plaintext highlighter-rouge">maybe_2</code>.</p>
+
+<h3 id="can-we-use-iife">Can we use IIFE?</h3>
+
+<p>You may think that an <a href="https://en.wikipedia.org/wiki/Immediately_invoked_function_expression">IIFE</a> is the appropriate approach to this, something along the lines of:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">iife</span><span class="p">{[](</span><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">v</span><span class="p">){</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">v</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">{</span> <span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">})</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">());</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+<span class="p">}()};</span>
+</code></pre></div></div>
+
+<p>That would simply not work because you cannot return from the outer function from inside the body of a lambda called in that function; this would only return from the lambda itself.</p>
+
+<h3 id="can-we-use-goto">Can we use goto?</h3>
+
+<p>Alternatively, you may be naturally conditioned to think that we could do this by using a <code class="language-plaintext highlighter-rouge">goto</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="nf">parent_function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// this is more for demonstration not how you would actually write it</span>
+  <span class="n">T</span> <span class="n">_value</span><span class="p">;</span>
+<span class="nl">_failure:</span>
+  <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">());</span>
+
+  <span class="k">const</span> <span class="k">auto</span> <span class="n">iife</span><span class="p">{[](</span><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">v</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">v</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">{</span> <span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">})</span> <span class="p">{</span>
+        <span class="n">_value</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">();</span>
+        <span class="k">goto</span> <span class="n">_failure</span><span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">_value</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+        <span class="k">goto</span> <span class="n">_failure</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+  <span class="p">}()};</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This reminds me of my patching days since it is a similar concept to trampolines.</p>
+
+<p>(If you are not familiar with some of these language constructs, they will be explained in a moment.)</p>
+
+<p>This is extremely dangerous, and would require us setting up a hook at the top of the function (for the <code class="language-plaintext highlighter-rouge">_failure</code> label) with a separate macro — a side effect that would immediately negate any ergonomics we otherwise want to gain. And we definitely don’t want to introduce impure ABI by modifying our compiler’s code to hard code it in the prologue of our functions, either.</p>
+
+<h3 id="so-what-even-remains-for-us-to-consider">So what even remains for us to consider?</h3>
+
+<p>Sometimes, to find the solution you seek, you must venture out into the wilderness. C and C++ are well known for their unique property of having ISO standards backing their specification, but just like any other language, extensions exist to them. GNU maintains a set of extension for it, and the one we are interested in for this discussion is <em>statement expressions</em>.</p>
+
+<p>The word extension might sound scary, but it is implemented by all new versions of GCC and Clang; if you have concerns about MSVC and Visual Studio compatibility, you can use a compatibility layer or the <a href="https://learn.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=msvc-170">clang-cl toolset</a>.</p>
+
+<p>Statement expressions are written like this:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">({</span>
+  <span class="n">statement1</span><span class="p">;</span>
+  <span class="n">statement2</span><span class="p">;</span>
+  <span class="c1">// ...</span>
+  <span class="n">final_value</span><span class="p">;</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>The value of final statement is the value returned, which treats our statement like a return one. But the benefit from this is that <em>actual</em> <code class="language-plaintext highlighter-rouge">return</code> statements (such as replacing <code class="language-plaintext highlighter-rouge">statement1</code> with a conditional return) can return from the parent function! This is precisely what we are asking for.</p>
+
+<h3 id="the-smaller-pillar">The smaller pillar</h3>
+
+<p>So we begin by writing the second case of the macro, which is less technically challenging:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_2(expr, fallback)                                                                   \
+  ({                                                                                              \
+    auto&amp;&amp; _result{(expr)};                                                                       \
+    if (!_result) {                                                                               \
+      [[maybe_unused]] auto&amp;&amp; _maybe_error{::_get_error(_result)};                                \
+      using _fallback_type = std::decay_t&lt;decltype(fallback)&gt;;                                    \
+      return std::unexpected&lt;_fallback_type&gt;(fallback);                                           \
+    }                                                                                             \
+    *std::move(_result);                                                                          \
+  })
+</span></code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">fallback</code> expression provided the user may use <code class="language-plaintext highlighter-rouge">_maybe_error</code> if they want to. We use C++17’s <code class="language-plaintext highlighter-rouge">[[maybe_unused]]</code> attribute to semantically communicate that its use is unnecessary, but also to hide potential compiler warnings.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">std::decay</code> is useful because it removes cv-qualifiers, references, and other things that could be obstructing our view on the actual type.</p>
+
+<p>For the <code class="language-plaintext highlighter-rouge">_get_error</code> function, we need to handle the possibly of both <code class="language-plaintext highlighter-rouge">std::optional</code> and <code class="language-plaintext highlighter-rouge">std::expected</code>. We can use a <code class="language-plaintext highlighter-rouge">requires</code> expression and compile-time branching to implement it.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">auto</span> <span class="nf">_get_error</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">container</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">{</span> <span class="n">container</span><span class="p">.</span><span class="n">error</span><span class="p">();</span> <span class="p">})</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">container</span><span class="p">).</span><span class="n">error</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="explanation">Explanation</h4>
+
+<p>The use of <a href="https://eel.is/c++draft/dcl.spec.auto"><code class="language-plaintext highlighter-rouge">decltype(auto)</code></a> is a relatively old feature from C++14 that essentially lets one use <code class="language-plaintext highlighter-rouge">auto</code> but with the rules of <code class="language-plaintext highlighter-rouge">decltype</code>; it exists because <code class="language-plaintext highlighter-rouge">auto</code> uses the rules of template deduction, so it does things like drop cv-qualifiers and references, but <code class="language-plaintext highlighter-rouge">decltype</code> follows different rules that preserve them with the use of <a href="https://stackoverflow.com/questions/13725747/what-are-the-reference-collapsing-rules-and-how-are-they-utilized-by-the-c-st">reference collapsing rules</a>. Don’t be confused because we aren’t literally passing an argument to <code class="language-plaintext highlighter-rouge">decltype</code>; this combination is actually a reserved keyword specified in the standard.</p>
+
+<p>The <a href="https://en.cppreference.com/w/cpp/language/requires.html"><code class="language-plaintext highlighter-rouge">requires</code> expression</a> allows us to check if a particular piece of code would compile, if we assume that the variables that it uses exist. In particular, the C++ standard explicitly states that if a type used is a template, then it will return a boolean where the program would otherwise be ill-formed; in other cases, the <code class="language-plaintext highlighter-rouge">requires</code> expression yields a hard error, so it is generally only used in contexts when we have a template parameter.</p>
+
+<p>Finally, the <a href="https://en.cppreference.com/w/cpp/utility/forward.html"><code class="language-plaintext highlighter-rouge">std::forward</code></a> is similar to <code class="language-plaintext highlighter-rouge">decltype(auto)</code>, in that it was created to preserve some sort of reference type passed. If you remember how <code class="language-plaintext highlighter-rouge">std::move</code> works, it doesn’t actually “move” anything; it simply converts the type passed (usually lvalue) back to the appropriate reference type, which can <em>later</em> be used with the move-assignment-operator. More specifically, while <code class="language-plaintext highlighter-rouge">std::move</code> unconditionally converts anything into an rvalue (specifically an xvalue), <code class="language-plaintext highlighter-rouge">std::forward</code> conditionally casts to rvalue or lvalue depending on the template type.</p>
+
+<h3 id="the-larger-pillar">The larger pillar</h3>
+
+<p>Now we need to implement the unary overload, i.e. the macro with a single argument. The reason this is more difficult is we need to be the ones who actually return the <em>correct</em> error.</p>
+
+<p>Suppose first that a function returns <code class="language-plaintext highlighter-rouge">std::expected&lt;T, E&gt;</code>. If you want to use this macro inside that function for a procedure that returns <code class="language-plaintext highlighter-rouge">std::expected&lt;U, E&gt;</code>, then you cannot simply return the error because there is a type mismatch between <code class="language-plaintext highlighter-rouge">T</code> and <code class="language-plaintext highlighter-rouge">U</code>; rather, you have to check that it is an <code class="language-plaintext highlighter-rouge">std::expected</code>, steal its wrapped value, and finally create an <code class="language-plaintext highlighter-rouge">std::expected</code> with the correct type template parameters.</p>
+
+<p>My naive approach was to do something along the lines of:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr) \
+  ({ \
+    auto&amp;&amp; _result{(expr)}; \
+    if (!_result) { \
+      auto&amp;&amp; _maybe_error = ::_get_error(_result); \
+      using _maybe_error_type = std::decay_t&lt;decltype(_maybe_error)&gt;; \
+      if constexpr (std::is_same_v&lt;_maybe_error_type, std::nullptr_t&gt;) { \
+        return std::nullopt; \
+      } else { \
+        return std::unexpected(_maybe_error); \
+      } \
+    } \
+    *std::move(_result); \
+  })
+</span></code></pre></div></div>
+
+<p>(If you were wondering why we use <code class="language-plaintext highlighter-rouge">nullptr</code> over <code class="language-plaintext highlighter-rouge">NULL</code>, this is why; it has its own type, <code class="language-plaintext highlighter-rouge">std::nullptr_t</code>, which opens the door for metaprogramming.)</p>
+
+<p>But anyway, this approach is incorrect because we cannot return two different types from an expression. You don’t see this happen often in C++ because we don’t have if expressions like in Rust, but with statement expressions it is something we actually need to be careful about.</p>
+
+<p>This is the compiler error you would get, when used in my application:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>../src/logic.cpp: In explicit object member function ‘std::expected&lt;void, colorlink::error::ColorLinkError&gt; colorlink::logic::ColorLinkLogic::process_lines(this colorlink::logic::ColorLinkLogic&amp;, std::string)’:
+../include/colorlink/macros.hpp:89:21: error: could not convert ‘std::nullopt’ from ‘const std::nullopt_t’ to ‘std::expected&lt;void, colorlink::error::ColorLinkError&gt;’
+   89 |         return std::nullopt;                                                                       \
+      |                ~~~~~^~~~~~~
+      |                     |
+      |                     const std::nullopt_t
+</code></pre></div></div>
+
+<p>So if you really think about it, we need some sort of wrapper type with an implicit conversion operator so that when our parent function receives the type back, it can convert it to the correct value.</p>
+
+<p>We shall store the error in a template:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Storage value;
+</code></pre></div></div>
+
+<p>It will be inferred with a similar technique:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">_maybe_error</span><span class="p">{</span><span class="o">::</span><span class="n">_get_error</span><span class="p">(</span><span class="n">_result</span><span class="p">)};</span>
+<span class="k">using</span> <span class="n">_maybe_error_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">_maybe_error</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>C++11 was the first to explicitly allow templated conversion operators, including implicit ones, so we can make our operators generic:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>That’s the meat of our solution. The rest is simple, with the only ceveat being that we treat <code class="language-plaintext highlighter-rouge">nullptr</code> as a special input for default-constructing the error, if it does not exist; this is used when we are converting optional error to an expected.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Storage</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">_maybe_failure_proxy</span> <span class="p">{</span>
+<span class="nl">private:</span>
+  <span class="k">using</span> <span class="n">Self</span> <span class="o">=</span> <span class="n">_maybe_failure_proxy</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+  <span class="n">Storage</span> <span class="n">value</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">([[</span><span class="n">maybe_unused</span><span class="p">]]</span> <span class="k">this</span> <span class="k">const</span> <span class="n">Self</span><span class="o">&amp;</span> <span class="n">_</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+  <span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="k">this</span> <span class="n">Self</span><span class="o">&amp;&amp;</span> <span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">Storage</span><span class="o">&gt;</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">value_type</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">nullptr_t</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">static_assert</span><span class="p">(</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">default_initializable</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s">"E must be default-initializable to convert from optional failure."</span>
+      <span class="p">);</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">E</span> <span class="p">{});</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">value</span><span class="p">));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>So our code compiles this time, using the new type:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr) \
+  ({ \
+    auto&amp;&amp; _result{(expr)}; \
+    if (!_result) { \
+      auto&amp;&amp; _maybe_error = ::_get_error(_result); \
+      using _maybe_error_type = std::decay_t&lt;decltype(_maybe_error)&gt;; \
+      return ::_maybe_failure_proxy&lt;_maybe_error_type&gt;(std::move(_maybe_error)); \
+    } \
+    *std::move(_result); \
+  })
+</span></code></pre></div></div>
+
+<p>Also, I greatly simplified the updated code with the use of deduction guides, part of C++17’s CTAD:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">_maybe_failure_proxy</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_maybe_failure_proxy</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="cp">#define maybe_1(expr)                                          \
+  ({                                                           \
+    auto&amp;&amp; _result{(expr)};                                   \
+    if (!_result) {                                           \
+      auto&amp;&amp; _maybe_error = ::_get_error(_result);          \
+      return ::_maybe_failure_proxy{::_get_error(_result)}; \
+    }                                                          \
+    *std::move(_result);                                      \
+  })
+</span>
+<span class="cp">#define maybe_2(expr, fallback)                                \
+  ({                                                           \
+    auto&amp;&amp; _result{(expr)};                                   \
+    if (!_result) {                                           \
+      return ::_maybe_failure_proxy{::_get_error(_result)}; \
+    }                                                          \
+    *std::move(_result);                                      \
+  })
+</span></code></pre></div></div>
+
+<p>So now in my application I can write code like in the following form:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="n">ColorLinkLogic</span><span class="o">::</span><span class="n">get_errors</span><span class="p">(</span>
+  <span class="p">[[</span><span class="n">maybe_unused</span><span class="p">]]</span> <span class="k">this</span> <span class="k">const</span> <span class="n">Self</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span>
+  <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">lines</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">error</span><span class="o">::</span><span class="n">ColorLinkError</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="k">auto</span> <span class="n">ColorLinkLogic</span><span class="o">::</span><span class="n">process_lines</span><span class="p">(</span>
+  <span class="k">this</span> <span class="n">Self</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">lines</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">,</span> <span class="n">error</span><span class="o">::</span><span class="n">ColorLinkError</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">errors</span> <span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">get_errors</span><span class="p">(</span><span class="n">lines</span><span class="p">))};</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>I think you could possibly write it with overloaded functions instead of a proxy type, but then you would need to repeat the <code class="language-plaintext highlighter-rouge">Storage</code> template for many functions; it becomes especially annoying if you want to extend this utility to convert to your own error types.</p>
+
+<h3 id="lambda-support">Lambda support</h3>
+
+<p>Instead of taking the <code class="language-plaintext highlighter-rouge">_maybe_error</code> for granted as a magic variable, some people may prefer a lambda.</p>
+
+<p>I would argue that this isn’t strictly better in this case, because a lambda is much more verbose for a commonly used primitive like this; we don’t need to worry about conflicts of the magic variable’s name in most cases, and if we keep it short (e.g. trimming it to <code class="language-plaintext highlighter-rouge">_e</code> from <code class="language-plaintext highlighter-rouge">_maybe_error</code>), then we have saved ourselves quite a bit of syntax for a primitive, because some clang-format setups dictate that all lambdas have an explicit return type, even if that type is <code class="language-plaintext highlighter-rouge">auto</code>.</p>
+
+<p>Regardless, it can be implemented relatively easily:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_2(expr, fallback)                                      \
+  ({                                                                 \
+    auto &amp;&amp;_result{(expr)};                                         \
+    if (!_result) {                                                 \
+      [[maybe_unused]] auto &amp;&amp;_e {::_get_error(_result)};         \
+      return ::_maybe_failure_proxy{::_get_result(fallback, _e)}; \
+    }                                                                \
+    *std::move(_result);                                            \
+  })
+</span></code></pre></div></div>
+
+<p>The new function <code class="language-plaintext highlighter-rouge">_get_result</code> simply checks if it is a callable:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">F</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">auto</span> <span class="nf">_get_result</span><span class="p">(</span><span class="n">F</span> <span class="o">&amp;&amp;</span><span class="n">fallback</span><span class="p">,</span> <span class="n">T</span> <span class="o">&amp;&amp;</span><span class="n">error</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">invocable</span><span class="o">&lt;</span><span class="n">F</span><span class="p">,</span> <span class="n">T</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fallback</span><span class="p">)(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fallback</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>You can use the lambda variant in more complex cases, and you can define the lambda externally for more complex error handling that requires reusability.</p>
+
+<h3 id="important-edge-cases">Important edge cases</h3>
+
+<p>The more complex you make something, the merrier the room for failure.</p>
+
+<h4 id="adding-stdunexpected-if-missing">Adding std::unexpected if missing</h4>
+
+<p>To support the last implicit example, we define the metafunction:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_expected</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span> <span class="p">{};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{};</span>
+</code></pre></div></div>
+
+<p>If you aren’t familiar with metafunctions, they are essentially small programs that run during compilation. They weren’t an explicit feature of the C++ standard initially (until type traits basically made them standardized) but a happy consequence of other features; the same goes for a popular but mostly obsolete trick you may have heard about named SFINAE. I wrote more about metafunctions <a href="http://127.0.0.1:4000/2025/11/21/template-specialization-and-concepts-in-cpp">here</a>.</p>
+
+<p>We use these in another compile-time branch:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="k">this</span> <span class="n">Self</span><span class="o">&amp;&amp;</span> <span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">Storage</span><span class="o">&gt;</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">value_type</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">nullptr_t</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">static_assert</span><span class="p">(</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">default_initializable</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">,</span>
+      <span class="s">"E must be default-initializable to convert from optional failure."</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">E</span> <span class="p">{});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nf">constexpr</span> <span class="p">(</span><span class="n">_is_expected</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">value</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">value</span><span class="p">));</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="avoiding-dereference-of-void">Avoiding dereference of void</h4>
+
+<p>Notice how we are dereferencing <code class="language-plaintext highlighter-rouge">_result</code>, and that is ill-formed if the return type <code class="language-plaintext highlighter-rouge">T</code> is <code class="language-plaintext highlighter-rouge">void</code>. (Recall that we expect <code class="language-plaintext highlighter-rouge">_result</code> to be an optional or an expected.) We fix this by adding yet another compile-time check to the return before doing so. So we have to update both macros.</p>
+
+<p>C++ STL provides us the unary type trait <code class="language-plaintext highlighter-rouge">std::is_void</code> for this.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr)                                                                              \
+  ({                                                                                               \
+    auto&amp;&amp; _result {(expr)};                                                                      \
+    if (!_result) {                                                                               \
+      return ::_maybe_failure_proxy{::_get_error(_result)};                                     \
+    }                                                                                              \
+    using _container_type = std::decay_t&lt;decltype(_result)&gt;;                                     \
+    if constexpr (std::is_void_v&lt;_container_type::value_type&gt;) {                                  \
+      (void)0;                                                                                     \
+    } else {                                                                                       \
+      *std::move(_result);                                                                        \
+    }                                                                                              \
+  })
+</span>
+<span class="cp">#define maybe_2(expr, fallback)                                                                    \
+  ({                                                                                               \
+    auto&amp;&amp; _result {(expr)};                                                                      \
+    if (!_result) {                                                                               \
+      [[maybe_unused]] auto&amp;&amp; _e {::_get_error(_result)};                                       \
+      return ::_maybe_failure_proxy{::_get_result(fallback, _e)};                               \
+    }                                                                                              \
+    using _container_type = std::decay_t&lt;decltype(_result)&gt;;                                     \
+    if constexpr (std::is_void_v&lt;_container_type::value_type&gt;) {                                  \
+      (void)0;                                                                                     \
+    } else {                                                                                       \
+      *std::move(_result);                                                                        \
+    }                                                                                              \
+  })
+</span></code></pre></div></div>
+
+<p>Haha, kidding!</p>
+
+<p>This doesn’t work because in C++ <code class="language-plaintext highlighter-rouge">if</code> is a statement, not an expression, and more importantly, the statements in our conditional blocks are NOT the last statements.</p>
+
+<p>Instead, we define another helper function that returns the proper deduced type:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">_maybe_failure_proxy</span><span class="p">(</span><span class="n">T</span> <span class="o">&amp;&amp;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_maybe_failure_proxy</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">auto</span> <span class="nf">_deref_or_void</span><span class="p">(</span><span class="n">T</span> <span class="o">&amp;&amp;</span><span class="n">container</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value_type</span><span class="p">;</span>
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_void_v</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">container</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>From there, it’s plug-and-play:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr)                                                          \
+  ({                                                                           \
+    auto &amp;&amp;_result{(expr)};                                                   \
+    if (!_result) {                                                           \
+      return ::_maybe_failure_proxy{::_get_error(_result)};                 \
+    }                                                                          \
+    ::_deref_or_void(std::move(_result));                                    \
+  })
+</span>
+<span class="cp">#define maybe_2(expr, fallback)                                                \
+  ({                                                                           \
+    auto &amp;&amp;_result{(expr)};                                                   \
+    if (!_result) {                                                           \
+      [[maybe_unused]] auto &amp;&amp;_e {::_get_error(_result)};                   \
+      return ::_maybe_failure_proxy{_get_result(fallback, _e)};             \
+    }                                                                          \
+    ::_deref_or_void(std::move(_result));                                    \
+  })
+</span></code></pre></div></div>
+
+<p>By the way, I was doing some research and I found that there is an old GNU extension for C specifically called <code class="language-plaintext highlighter-rouge">__builtin_choose_expr</code>, which works like this:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">__builtin_choose_expr</span><span class="p">(</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">is_void_v</span><span class="o">&lt;</span><span class="n">_val_t</span><span class="o">&gt;</span><span class="p">,</span>
+  <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span>
+  <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">_result</span><span class="p">);</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<p>This would also allow us to achieve the same thing for constant expressions. It seems like it’s not needed for C++ as it does not support it, but it’s a cool historical artifact.</p>
+
+<h4 id="nested-uses-of-maybe-expressions">Nested uses of maybe expressions</h4>
+
+<p>This already works because statement expressions automatically resolve any scoping issues we would have with macros, so you can do things like:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe</span><span class="p">(</span><span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">()));</span>
+</code></pre></div></div>
+
+<h3 id="some-conveniences">Some conveniences</h3>
+
+<p>In my actual library, I have <code class="language-plaintext highlighter-rouge">maybe_twice</code> and <code class="language-plaintext highlighter-rouge">maybe_thrice</code> to make the nesting cleaner:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe_twice</span><span class="p">(</span><span class="n">foo</span><span class="p">());</span> <span class="c1">// equivalent to maybe(maybe(foo()));</span>
+<span class="n">maybe_thrice</span><span class="p">(</span><span class="n">foo</span><span class="p">());</span> <span class="c1">// equivalent to maybe(maybe(maybe(foo())));</span>
+</code></pre></div></div>
+
+<p>Also, I made it detect nullary functors so that I don’t have to use parentheses:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe_twice</span><span class="p">(</span><span class="n">foo</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>(These changes will be pushed to my repository soon.)</p>
+
+<p>I do kind of wish that we would be able to define our own operators in C++ so that I can have something like an <code class="language-plaintext highlighter-rouge">!</code> operator to invoke the basic <code class="language-plaintext highlighter-rouge">maybe</code> overload (e.g. <code class="language-plaintext highlighter-rouge">foo()!!</code>), or at least be able to use non-ASCII names for macros (e.g. <code class="language-plaintext highlighter-rouge">!(!(foo()))</code>), but it is what it is. You would get the added benefit of your code screaming at you, which is something that could prove useful from time to time.</p>
+
+<h2 id="the-turing-test">The Turing Test</h2>
+
+<p>We now support a variety of things. Here are the primary examples:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="n">foo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{};</span> <span class="p">}</span>
+
+<span class="k">auto</span> <span class="nf">bar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">());</span> <span class="c1">// minimal</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">_e</span><span class="p">));</span> <span class="c1">// explicit version of above</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">_e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span> <span class="c1">// our own</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="n">_e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">// implicit std::unexpected() wrapper</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="p">[](</span><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">auto</span> <span class="p">{</span> <span class="k">return</span> <span class="n">e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="p">});</span> <span class="c1">// lambda variant</span>
+  <span class="k">return</span> <span class="p">{};</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="going-forward">Going forward</h2>
+
+<p>A new language construct has been proposed called <em>do expressions</em> in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2806r3.html">P2806</a>. Its purpose is to modernize and standardize statement expressions. Perhaps we will get something like this in C++29, which will make our implementation of the operator more idiomatic.</p>
+
+<h2 id="handy-tips">Handy tips</h2>
+
+<p>If you want to use this solution, here are my personal guidelines:</p>
+
+<ul>
+  <li>If you want to return a simple error, use the <code class="language-plaintext highlighter-rouge">_e</code> shortcut.</li>
+  <li>If you observe that you repeatedly use the same error in <code class="language-plaintext highlighter-rouge">maybe</code>, define a local lambda and pass it via the second argument’s overload.</li>
+  <li>If you need more complex error transformations, do them before the call to <code class="language-plaintext highlighter-rouge">maybe</code> and store the error for reuse; you can also define a namespace function if you have an error pattern repeating across several modules.</li>
+</ul>
+
+<h2 id="full-code">Full code</h2>
+
+<p>Since my website currently has bad formatting for macros, pasting the entire thing would be horror, so you can find the code and star my GitHub repository to track its progress <a href="https://github.com/quarterstar/contourcpp">here</a>.</p>
+
+<h2 id="additional-notes--honorable-mentions">Additional notes &amp; honorable mentions</h2>
+
+<p>Following my implementation, I noticed that another project, <a href="https://github.com/Rucadi/cpp-match">cppmatch</a>, from last year, implemented this by using the same compiler extension, so I wanted to give a props to them as well. Nevertheless, I made this blog post since mine works a bit differently and adds some additional features that I wanted to make a proper writeup about, like the binary overload.</p>
+
+<p>In addition, I want to give a honorable mention to effort that has been done to implement it with coroutines instead. This can be seen in a blog by <a href="https://cpp-rendering.io/c-error-handling-lets-abuse-the-co_await-operator/">cpp-rendering.io</a>. Note that this approach has had reports that there are irreducible heap allocations and issues on GCC for similar coroutine implementations, and there might be additional performance overhead that has not yet been documented.</p>
+
+<aside class="callout callout--info" role="note" aria-label="Tip">
+  <div class="callout__inner">
+    <div class="callout-header">
+      <span class="callout__icon" aria-hidden="true">ℹ️</span><strong class="callout__title">Tip</strong></div>
+
+    <div class="callout__content">
+<p>I am a freshman in university planning to continue my studies abroad in a few years. If you would like to support me, I have several donation methods on my website, and you can subscribe to my newsletter for free below.</p>
+</div>
+  </div>
+</aside>
+
+
+        </article>
+        
+        <div class="separator"></div>
+
+        <section id="newsletter-section">
+          <h2>Enjoyed reading? Subscribe to my newsletter.</h2>
+          <div id="newsletter-container">
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+        </section>
+
+        
+
+
+<div class="author-bio separator">
+  <div class="author-credentials">
+    <img src="/assets/images/icons/quarterstar.svg" alt="Quarterstar" class="author-avatar">
+    <p class="shout">Quarterstar</p>
+  </div>
+  <div class="author-info">
+    <p>Machine learning researcher with special interests in 3D graphics, privacy enhancement, low-level programming, and mathematics.</p>
+  </div>
+  <div class="author-links">
+    
+      <a href="https://github.com/quarterstar"><img src="/assets/images/icons/github-mark.svg" alt="GitHub"></img></a>
+    
+    
+      <a href="https://github.com/quarterstar_"><img src="/assets/images/icons/Reddit_Icon_2Color.svg" alt="Reddit"></img></a>
+    
+    
+      <a href="https://discord.gg/vcfmKdceXF"><img src="/assets/images/icons/Discord-Symbol-Blurple.svg" alt="Discord"></img></a>
+    
+  </div>
+</div>
+
+
+        <div id="comment-section-container">
+        </div>
+      </main>
+
+      <template id="sidebar-right-template">
+        <aside id="sidebar-right">
+          <section id="inline-newsletter-section">
+  <h2>SUBSCRIBE TO NEWSLETTER</h2>
+
+  <div id="newsletter-container">
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</section>
+
+          <h2>RELATED ARTICLES BY TAG</h2>
+
+<section>
+  <ul id="matching-articles">
+  
+    <li>
+      <section>
+        <h3>CPP</h3>
+        <ul>
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                
+                  <li>
+                    <a href="/articles/template-specialization-and-concepts-in-cpp">Template Specialization & Concepts in C++</a>
+                    <small class="muted">(Nov 21, 2025)</small>
+                  </li>
+                
+              
+                
+              
+            
+          
+            
+              
+                
+              
+                
+              
+            
+          
+        </ul>
+      </section>
+    </li>
+  
+    <li>
+      <section>
+        <h3>PROGRAMMING</h3>
+        <ul>
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                
+              
+                
+                  <li>
+                    <a href="/articles/template-specialization-and-concepts-in-cpp">Template Specialization & Concepts in C++</a>
+                    <small class="muted">(Nov 21, 2025)</small>
+                  </li>
+                
+              
+            
+          
+            
+              
+                
+              
+                
+                  <li>
+                    <a href="/articles/understanding-the-nix-store-by-hunting-packages-down">Understanding the Nix Store by Hunting Packages Down</a>
+                    <small class="muted">(Oct 26, 2025)</small>
+                  </li>
+                
+              
+            
+          
+        </ul>
+      </section>
+    </li>
+  
+  </ul>
+</section>
+
+          <section>
+  <h2>RANDOM FRACTAL</h2>
+  <img width="50%" height="50%" src="/assets/images/graphics/fractals.png" loading="lazy">
+</section>
+
+        </aside>
+      </template>
+      <div id="sidebar-right-container"></div>
+    </div>
+
+    <footer>
+      <p>&copy; 1970–2026 Quarterstar, All Rights Reserved.</p>
+
+    </footer>
+
+    <script type="module" src="/assets/scripts/bundle.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://www.quarterstar.tech/articles/understanding-the-nix-store-by-hunting-packages-down/</loc>
+<lastmod>2025-10-26T00:00:00+02:00</lastmod>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp/</loc>
+<lastmod>2025-11-21T00:00:00+01:00</lastmod>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/</loc>
+<lastmod>2025-12-22T00:00:00+01:00</lastmod>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator/</loc>
+<lastmod>2026-03-30T00:00:00+02:00</lastmod>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/pages/articles/</loc>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/pages/donate/</loc>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/pages/</loc>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/pages/legal/</loc>
+</url>
+<url>
+<loc>https://www.quarterstar.tech/pages/unimplemented/</loc>
+</url>
+</urlset>

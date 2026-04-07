@@ -1,0 +1,1883 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://www.quarterstar.tech/feed.xml" rel="self" type="application/atom+xml" /><link href="https://www.quarterstar.tech/" rel="alternate" type="text/html" /><updated>2026-04-07T17:19:04+02:00</updated><id>https://www.quarterstar.tech/feed.xml</id><title type="html">Quarterstar</title><subtitle>Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.</subtitle><entry><title type="html">Rust to C++: Implementing The Question Mark Operator</title><link href="https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator/" rel="alternate" type="text/html" title="Rust to C++: Implementing The Question Mark Operator" /><published>2026-03-30T00:00:00+02:00</published><updated>2026-03-30T00:00:00+02:00</updated><id>https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator</id><content type="html" xml:base="https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator/"><![CDATA[<h2 id="introduction">Introduction</h2>
+
+<p>One of the most important quality-of-life features coming from Rust, for me, that is missing from C++, is the <code class="language-plaintext highlighter-rouge">?</code> operator; it is critical if you handle errors via values instead of exceptions, like many modern languages do. This article will show you how I implemented it in C++.</p>
+
+<p>This article may not be particularly suitable for C++ beginners, but I have tried to make it approachable with as much love as I’m legally allowed to give.</p>
+
+<p>The feature discussed was proposed in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2561r1.html">P2561</a> all the way back in 2022.</p>
+
+<h3 id="why-does-it-exist-in-rust">Why does it exist in Rust?</h3>
+
+<p>Instead of writing code like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">maybe_value</span><span class="p">{</span><span class="n">some_optional_or_expected</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)};</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">maybe_value</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="cm">/* .error() or nullopt or some other error */</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe_value</span><span class="p">.</span><span class="n">value</span><span class="p">()};</span>
+</code></pre></div></div>
+
+<p>If we had the same operator from Rust, we would be able to write it like this instead:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">some_optional_or_expected</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)</span><span class="o">?</span><span class="p">};</span>
+</code></pre></div></div>
+
+<p>(This is completely unrelated to the ternary operator, and <code class="language-plaintext highlighter-rouge">?</code> is used for illustration here.)</p>
+
+<p>If the optional is missing, then the <code class="language-plaintext highlighter-rouge">std::nullopt</code> is returned, and if <code class="language-plaintext highlighter-rouge">std::expected</code> has error that error is returned; otherwise, control flow continues.</p>
+
+<p>Now, the lack of this feature would be somewhat tolerable if C++ supported variable shadowing <em>within the same scope</em>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">some_optional_or_expected</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)};</span>
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">value</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe_value</span><span class="p">.</span><span class="n">value</span><span class="p">()};</span> <span class="c1">// type changes!</span>
+</code></pre></div></div>
+
+<p>Of course, we can at least write it like this <a href="https://skebanga.github.io/if-with-initializer/">C++17’s if statement with initializer</a>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="p">(</span><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span> <span class="o">=</span> <span class="n">some_optional_or_expected</span><span class="p">();</span> <span class="o">!</span><span class="n">value</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">value</span><span class="p">.</span><span class="n">error</span><span class="p">();</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="whats-wrong-with-the-current-approaches-of-c">What’s wrong with the current approaches of C++?</h3>
+
+<p>The problem this operator solves is not being able to do this common procedure inline; this becomes very important when your entire application is based on optionals and expecteds, and it’s why Rust made the operator.</p>
+
+<p>In addition, something that Rust doesn’t have with <code class="language-plaintext highlighter-rouge">?</code> is being able to return a modified error type within the same operator. This is something I actively need: if for example it is an error, you should be able to change the return type to something else, possibility looking at the error itself. (This is basically syntactic sugar for doing a chain of transformations, but covering simple cases.)</p>
+
+<p>Unfortunately, the lack of this feature is one of the many annoyances of C++ we have to deal with to the heat death of the universe, just like we cannot extend STL types to have basic string methods we have been asking for the last decade because <a href="https://brevzin.github.io/c++/2019/04/13/ufcs-history/">UFCS won’t be supported until C++53, for various reasons</a>.</p>
+
+<p>Fortunately, however, one tool comes to the rescue at the end of this insidiously obscene tunnel, as the C preprocessor is more powerful than some people think; it allows us to fully emulate this feature in C++, and on top of that, get a text dump jumpscare when you make a mistake for free. (Due to the ongoing tarriffs, error production has been reduced by 50% since last quarter.)</p>
+
+<h2 id="the-implementation">The implementation</h2>
+
+<p>Since it’s a convention in C++ to prefix the discussed practice with <code class="language-plaintext highlighter-rouge">maybe_</code>, I thought it would be fitting to name my macro <code class="language-plaintext highlighter-rouge">maybe</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">)};</span>
+</code></pre></div></div>
+
+<p>(IIRC, <code class="language-plaintext highlighter-rouge">maybe</code> was a keyword in C++20 contracts that were subsequently removed, so it should be safe to use, but if you want to be safe you can add your own prefix to it; for example, in C++ the <code class="language-plaintext highlighter-rouge">co_yield</code> keyword has that name instead of <code class="language-plaintext highlighter-rouge">yield</code> for routines.)</p>
+
+<p>The reason I don’t use uppercase is because in my codebase I treat this like a primitive, just like <code class="language-plaintext highlighter-rouge">&lt;cassert&gt;</code>’s assertion macro is not uppercase. (Did you know that it’s a macro?)</p>
+
+<p>The base case is when the user simply wants to return the bad value, which is just one argument:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">expected_or_optional</span><span class="p">)};</span>
+</code></pre></div></div>
+
+<p>Now, in my case, one thing I wanted is a second argument that lets me modify the return value within the error basis:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">value</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">expected_or_optional</span><span class="p">,</span> <span class="cm">/* ??? */</span><span class="p">)};</span>
+</code></pre></div></div>
+
+<p>This could likely be avoided by using <code class="language-plaintext highlighter-rouge">and_then</code>, <code class="language-plaintext highlighter-rouge">transform</code>, but the point of this optimization is to make our syntax as compact as possible.</p>
+
+<p>For example, in the tokenization phase of a parser tool I’m developing, I needed this to return a missing component if a regular expression did not find a match (for those interested, I used a great library called <a href="https://github.com/hanickadot/compile-time-regular-expressions"><code class="language-plaintext highlighter-rouge">ctre</code></a>):</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">binary</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">search</span><span class="o">&lt;</span><span class="n">binary_pattern</span><span class="o">&gt;</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">missing_component</span><span class="p">(</span><span class="s">"binary"</span><span class="p">)))};</span>
+</code></pre></div></div>
+
+<p>I will be able to make errors that repeated in my code even smaller when C++26 compile-time reflection is implemented in compilers, but until then we have another layer to deal with.</p>
+
+<p>In other cases, I want to take the actual wrapped return value and run some expression on it that modifies it in some way. To do this, I made my macro define the intermediate <code class="language-plaintext highlighter-rouge">_maybe_macro</code> variable:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">binary</span><span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">expected_or_optional</span><span class="p">,</span> <span class="n">expression</span><span class="p">(</span><span class="n">_maybe_error</span><span class="p">))};</span>
+</code></pre></div></div>
+
+<p>Note that the resolution of shadowing concerns with this will come packaged with the language construct that we shall use.</p>
+
+<p>So our first question is how do we even have macro overloading? The preprocessor does not let us simply define a macro with the same name twice. There is a pattern to implement it and I personally call it <em>macro routing</em>. It looks like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define GET_maybe_MACRO(_1, _2, NAME, ...) NAME
+#define maybe(...) GET_maybe_MACRO(__VA_ARGS__, maybe_2, maybe_1)(__VA_ARGS__)
+</span></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">maybe_1</code> and <code class="language-plaintext highlighter-rouge">maybe_2</code> are other macros that will be explained in a moment. The <code class="language-plaintext highlighter-rouge">...</code> is the variadic parameter itself; it is what allows us to collect all the extra parameters we need. Since we cannot simply refer to <code class="language-plaintext highlighter-rouge">...</code> in the body, another preprocessor token was defined by the standard, <code class="language-plaintext highlighter-rouge">__VA_ARGS__</code>.</p>
+
+<p>The routing you see works by pushing the macro names to the end of the argument list, so that the <code class="language-plaintext highlighter-rouge">NAME</code> picked is the one that is last available. So suppose you call:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In that situation, the preprocessor would evaluate it (well not literally evaluate since it’s just substituting literal text) to:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">GET_maybe_MACRO</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">maybe_2</span><span class="p">,</span> <span class="n">maybe_1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So the <code class="language-plaintext highlighter-rouge">NAME</code> will be <code class="language-plaintext highlighter-rouge">maybe_1.</code> If we added another argument:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This is also fine because even though we exceed three arguments we support accepting more because variadic arguments are accepted and subsequently ignored, so we get:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">GET_maybe_MACRO</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">maybe_2</span><span class="p">,</span> <span class="n">maybe_1</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>So our final evaluation of <code class="language-plaintext highlighter-rouge">NAME</code> is the third argument, <code class="language-plaintext highlighter-rouge">maybe_2</code>. So that’s how the macro routing aspect works.</p>
+
+<p>Now, you may have many ideas for the implementation of <code class="language-plaintext highlighter-rouge">maybe_1</code> and <code class="language-plaintext highlighter-rouge">maybe_2</code>.</p>
+
+<h3 id="can-we-use-iife">Can we use IIFE?</h3>
+
+<p>You may think that an <a href="https://en.wikipedia.org/wiki/Immediately_invoked_function_expression">IIFE</a> is the appropriate approach to this, something along the lines of:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">const</span> <span class="k">auto</span> <span class="n">iife</span><span class="p">{[](</span><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">v</span><span class="p">){</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">v</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">{</span> <span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">})</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">());</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+<span class="p">}()};</span>
+</code></pre></div></div>
+
+<p>That would simply not work because you cannot return from the outer function from inside the body of a lambda called in that function; this would only return from the lambda itself.</p>
+
+<h3 id="can-we-use-goto">Can we use goto?</h3>
+
+<p>Alternatively, you may be naturally conditioned to think that we could do this by using a <code class="language-plaintext highlighter-rouge">goto</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="nf">parent_function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// this is more for demonstration not how you would actually write it</span>
+  <span class="n">T</span> <span class="n">_value</span><span class="p">;</span>
+<span class="nl">_failure:</span>
+  <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">());</span>
+
+  <span class="k">const</span> <span class="k">auto</span> <span class="n">iife</span><span class="p">{[](</span><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">v</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">v</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">{</span> <span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="p">})</span> <span class="p">{</span>
+        <span class="n">_value</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">error</span><span class="p">();</span>
+        <span class="k">goto</span> <span class="n">_failure</span><span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">_value</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+        <span class="k">goto</span> <span class="n">_failure</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+  <span class="p">}()};</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This reminds me of my patching days since it is a similar concept to trampolines.</p>
+
+<p>(If you are not familiar with some of these language constructs, they will be explained in a moment.)</p>
+
+<p>This is extremely dangerous, and would require us setting up a hook at the top of the function (for the <code class="language-plaintext highlighter-rouge">_failure</code> label) with a separate macro — a side effect that would immediately negate any ergonomics we otherwise want to gain. And we definitely don’t want to introduce impure ABI by modifying our compiler’s code to hard code it in the prologue of our functions, either.</p>
+
+<h3 id="so-what-even-remains-for-us-to-consider">So what even remains for us to consider?</h3>
+
+<p>Sometimes, to find the solution you seek, you must venture out into the wilderness. C and C++ are well known for their unique property of having ISO standards backing their specification, but just like any other language, extensions exist to them. GNU maintains a set of extension for it, and the one we are interested in for this discussion is <em>statement expressions</em>.</p>
+
+<p>The word extension might sound scary, but it is implemented by all new versions of GCC and Clang; if you have concerns about MSVC and Visual Studio compatibility, you can use a compatibility layer or the <a href="https://learn.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=msvc-170">clang-cl toolset</a>.</p>
+
+<p>Statement expressions are written like this:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">({</span>
+  <span class="n">statement1</span><span class="p">;</span>
+  <span class="n">statement2</span><span class="p">;</span>
+  <span class="c1">// ...</span>
+  <span class="n">final_value</span><span class="p">;</span>
+<span class="p">})</span>
+</code></pre></div></div>
+
+<p>The value of final statement is the value returned, which treats our statement like a return one. But the benefit from this is that <em>actual</em> <code class="language-plaintext highlighter-rouge">return</code> statements (such as replacing <code class="language-plaintext highlighter-rouge">statement1</code> with a conditional return) can return from the parent function! This is precisely what we are asking for.</p>
+
+<h3 id="the-smaller-pillar">The smaller pillar</h3>
+
+<p>So we begin by writing the second case of the macro, which is less technically challenging:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_2(expr, fallback)                                                                   \
+  ({                                                                                              \
+    auto&amp;&amp; _result{(expr)};                                                                       \
+    if (!_result) {                                                                               \
+      [[maybe_unused]] auto&amp;&amp; _maybe_error{::_get_error(_result)};                                \
+      using _fallback_type = std::decay_t&lt;decltype(fallback)&gt;;                                    \
+      return std::unexpected&lt;_fallback_type&gt;(fallback);                                           \
+    }                                                                                             \
+    *std::move(_result);                                                                          \
+  })
+</span></code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">fallback</code> expression provided the user may use <code class="language-plaintext highlighter-rouge">_maybe_error</code> if they want to. We use C++17’s <code class="language-plaintext highlighter-rouge">[[maybe_unused]]</code> attribute to semantically communicate that its use is unnecessary, but also to hide potential compiler warnings.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">std::decay</code> is useful because it removes cv-qualifiers, references, and other things that could be obstructing our view on the actual type.</p>
+
+<p>For the <code class="language-plaintext highlighter-rouge">_get_error</code> function, we need to handle the possibly of both <code class="language-plaintext highlighter-rouge">std::optional</code> and <code class="language-plaintext highlighter-rouge">std::expected</code>. We can use a <code class="language-plaintext highlighter-rouge">requires</code> expression and compile-time branching to implement it.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">auto</span> <span class="nf">_get_error</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">container</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="k">requires</span> <span class="p">{</span> <span class="n">container</span><span class="p">.</span><span class="n">error</span><span class="p">();</span> <span class="p">})</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">container</span><span class="p">).</span><span class="n">error</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="explanation">Explanation</h4>
+
+<p>The use of <a href="https://eel.is/c++draft/dcl.spec.auto"><code class="language-plaintext highlighter-rouge">decltype(auto)</code></a> is a relatively old feature from C++14 that essentially lets one use <code class="language-plaintext highlighter-rouge">auto</code> but with the rules of <code class="language-plaintext highlighter-rouge">decltype</code>; it exists because <code class="language-plaintext highlighter-rouge">auto</code> uses the rules of template deduction, so it does things like drop cv-qualifiers and references, but <code class="language-plaintext highlighter-rouge">decltype</code> follows different rules that preserve them with the use of <a href="https://stackoverflow.com/questions/13725747/what-are-the-reference-collapsing-rules-and-how-are-they-utilized-by-the-c-st">reference collapsing rules</a>. Don’t be confused because we aren’t literally passing an argument to <code class="language-plaintext highlighter-rouge">decltype</code>; this combination is actually a reserved keyword specified in the standard.</p>
+
+<p>The <a href="https://en.cppreference.com/w/cpp/language/requires.html"><code class="language-plaintext highlighter-rouge">requires</code> expression</a> allows us to check if a particular piece of code would compile, if we assume that the variables that it uses exist. In particular, the C++ standard explicitly states that if a type used is a template, then it will return a boolean where the program would otherwise be ill-formed; in other cases, the <code class="language-plaintext highlighter-rouge">requires</code> expression yields a hard error, so it is generally only used in contexts when we have a template parameter.</p>
+
+<p>Finally, the <a href="https://en.cppreference.com/w/cpp/utility/forward.html"><code class="language-plaintext highlighter-rouge">std::forward</code></a> is similar to <code class="language-plaintext highlighter-rouge">decltype(auto)</code>, in that it was created to preserve some sort of reference type passed. If you remember how <code class="language-plaintext highlighter-rouge">std::move</code> works, it doesn’t actually “move” anything; it simply converts the type passed (usually lvalue) back to the appropriate reference type, which can <em>later</em> be used with the move-assignment-operator. More specifically, while <code class="language-plaintext highlighter-rouge">std::move</code> unconditionally converts anything into an rvalue (specifically an xvalue), <code class="language-plaintext highlighter-rouge">std::forward</code> conditionally casts to rvalue or lvalue depending on the template type.</p>
+
+<h3 id="the-larger-pillar">The larger pillar</h3>
+
+<p>Now we need to implement the unary overload, i.e. the macro with a single argument. The reason this is more difficult is we need to be the ones who actually return the <em>correct</em> error.</p>
+
+<p>Suppose first that a function returns <code class="language-plaintext highlighter-rouge">std::expected&lt;T, E&gt;</code>. If you want to use this macro inside that function for a procedure that returns <code class="language-plaintext highlighter-rouge">std::expected&lt;U, E&gt;</code>, then you cannot simply return the error because there is a type mismatch between <code class="language-plaintext highlighter-rouge">T</code> and <code class="language-plaintext highlighter-rouge">U</code>; rather, you have to check that it is an <code class="language-plaintext highlighter-rouge">std::expected</code>, steal its wrapped value, and finally create an <code class="language-plaintext highlighter-rouge">std::expected</code> with the correct type template parameters.</p>
+
+<p>My naive approach was to do something along the lines of:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr) \
+  ({ \
+    auto&amp;&amp; _result{(expr)}; \
+    if (!_result) { \
+      auto&amp;&amp; _maybe_error = ::_get_error(_result); \
+      using _maybe_error_type = std::decay_t&lt;decltype(_maybe_error)&gt;; \
+      if constexpr (std::is_same_v&lt;_maybe_error_type, std::nullptr_t&gt;) { \
+        return std::nullopt; \
+      } else { \
+        return std::unexpected(_maybe_error); \
+      } \
+    } \
+    *std::move(_result); \
+  })
+</span></code></pre></div></div>
+
+<p>(If you were wondering why we use <code class="language-plaintext highlighter-rouge">nullptr</code> over <code class="language-plaintext highlighter-rouge">NULL</code>, this is why; it has its own type, <code class="language-plaintext highlighter-rouge">std::nullptr_t</code>, which opens the door for metaprogramming.)</p>
+
+<p>But anyway, this approach is incorrect because we cannot return two different types from an expression. You don’t see this happen often in C++ because we don’t have if expressions like in Rust, but with statement expressions it is something we actually need to be careful about.</p>
+
+<p>This is the compiler error you would get, when used in my application:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>../src/logic.cpp: In explicit object member function ‘std::expected&lt;void, colorlink::error::ColorLinkError&gt; colorlink::logic::ColorLinkLogic::process_lines(this colorlink::logic::ColorLinkLogic&amp;, std::string)’:
+../include/colorlink/macros.hpp:89:21: error: could not convert ‘std::nullopt’ from ‘const std::nullopt_t’ to ‘std::expected&lt;void, colorlink::error::ColorLinkError&gt;’
+   89 |         return std::nullopt;                                                                       \
+      |                ~~~~~^~~~~~~
+      |                     |
+      |                     const std::nullopt_t
+</code></pre></div></div>
+
+<p>So if you really think about it, we need some sort of wrapper type with an implicit conversion operator so that when our parent function receives the type back, it can convert it to the correct value.</p>
+
+<p>We shall store the error in a template:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Storage value;
+</code></pre></div></div>
+
+<p>It will be inferred with a similar technique:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">_maybe_error</span><span class="p">{</span><span class="o">::</span><span class="n">_get_error</span><span class="p">(</span><span class="n">_result</span><span class="p">)};</span>
+<span class="k">using</span> <span class="n">_maybe_error_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">_maybe_error</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>C++11 was the first to explicitly allow templated conversion operators, including implicit ones, so we can make our operators generic:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>That’s the meat of our solution. The rest is simple, with the only ceveat being that we treat <code class="language-plaintext highlighter-rouge">nullptr</code> as a special input for default-constructing the error, if it does not exist; this is used when we are converting optional error to an expected.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Storage</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">_maybe_failure_proxy</span> <span class="p">{</span>
+<span class="nl">private:</span>
+  <span class="k">using</span> <span class="n">Self</span> <span class="o">=</span> <span class="n">_maybe_failure_proxy</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+  <span class="n">Storage</span> <span class="n">value</span><span class="p">;</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+  <span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">([[</span><span class="n">maybe_unused</span><span class="p">]]</span> <span class="k">this</span> <span class="k">const</span> <span class="n">Self</span><span class="o">&amp;</span> <span class="n">_</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+  <span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="k">this</span> <span class="n">Self</span><span class="o">&amp;&amp;</span> <span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">Storage</span><span class="o">&gt;</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">value_type</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">nullptr_t</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">static_assert</span><span class="p">(</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">default_initializable</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="s">"E must be default-initializable to convert from optional failure."</span>
+      <span class="p">);</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">E</span> <span class="p">{});</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">value</span><span class="p">));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>So our code compiles this time, using the new type:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr) \
+  ({ \
+    auto&amp;&amp; _result{(expr)}; \
+    if (!_result) { \
+      auto&amp;&amp; _maybe_error = ::_get_error(_result); \
+      using _maybe_error_type = std::decay_t&lt;decltype(_maybe_error)&gt;; \
+      return ::_maybe_failure_proxy&lt;_maybe_error_type&gt;(std::move(_maybe_error)); \
+    } \
+    *std::move(_result); \
+  })
+</span></code></pre></div></div>
+
+<p>Also, I greatly simplified the updated code with the use of deduction guides, part of C++17’s CTAD:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">_maybe_failure_proxy</span><span class="p">(</span><span class="n">T</span><span class="o">&amp;&amp;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_maybe_failure_proxy</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="cp">#define maybe_1(expr)                                          \
+  ({                                                           \
+    auto&amp;&amp; _result{(expr)};                                   \
+    if (!_result) {                                           \
+      auto&amp;&amp; _maybe_error = ::_get_error(_result);          \
+      return ::_maybe_failure_proxy{::_get_error(_result)}; \
+    }                                                          \
+    *std::move(_result);                                      \
+  })
+</span>
+<span class="cp">#define maybe_2(expr, fallback)                                \
+  ({                                                           \
+    auto&amp;&amp; _result{(expr)};                                   \
+    if (!_result) {                                           \
+      return ::_maybe_failure_proxy{::_get_error(_result)}; \
+    }                                                          \
+    *std::move(_result);                                      \
+  })
+</span></code></pre></div></div>
+
+<p>So now in my application I can write code like in the following form:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="n">ColorLinkLogic</span><span class="o">::</span><span class="n">get_errors</span><span class="p">(</span>
+  <span class="p">[[</span><span class="n">maybe_unused</span><span class="p">]]</span> <span class="k">this</span> <span class="k">const</span> <span class="n">Self</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span>
+  <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">lines</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">error</span><span class="o">::</span><span class="n">ColorLinkError</span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="k">auto</span> <span class="n">ColorLinkLogic</span><span class="o">::</span><span class="n">process_lines</span><span class="p">(</span>
+  <span class="k">this</span> <span class="n">Self</span><span class="o">&amp;</span> <span class="n">self</span><span class="p">,</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">lines</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">,</span> <span class="n">error</span><span class="o">::</span><span class="n">ColorLinkError</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">errors</span> <span class="p">{</span><span class="n">maybe</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">get_errors</span><span class="p">(</span><span class="n">lines</span><span class="p">))};</span>
+  <span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>I think you could possibly write it with overloaded functions instead of a proxy type, but then you would need to repeat the <code class="language-plaintext highlighter-rouge">Storage</code> template for many functions; it becomes especially annoying if you want to extend this utility to convert to your own error types.</p>
+
+<h3 id="lambda-support">Lambda support</h3>
+
+<p>Instead of taking the <code class="language-plaintext highlighter-rouge">_maybe_error</code> for granted as a magic variable, some people may prefer a lambda.</p>
+
+<p>I would argue that this isn’t strictly better in this case, because a lambda is much more verbose for a commonly used primitive like this; we don’t need to worry about conflicts of the magic variable’s name in most cases, and if we keep it short (e.g. trimming it to <code class="language-plaintext highlighter-rouge">_e</code> from <code class="language-plaintext highlighter-rouge">_maybe_error</code>), then we have saved ourselves quite a bit of syntax for a primitive, because some clang-format setups dictate that all lambdas have an explicit return type, even if that type is <code class="language-plaintext highlighter-rouge">auto</code>.</p>
+
+<p>Regardless, it can be implemented relatively easily:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_2(expr, fallback)                                      \
+  ({                                                                 \
+    auto &amp;&amp;_result{(expr)};                                         \
+    if (!_result) {                                                 \
+      [[maybe_unused]] auto &amp;&amp;_e {::_get_error(_result)};         \
+      return ::_maybe_failure_proxy{::_get_result(fallback, _e)}; \
+    }                                                                \
+    *std::move(_result);                                            \
+  })
+</span></code></pre></div></div>
+
+<p>The new function <code class="language-plaintext highlighter-rouge">_get_result</code> simply checks if it is a callable:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">F</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">auto</span> <span class="nf">_get_result</span><span class="p">(</span><span class="n">F</span> <span class="o">&amp;&amp;</span><span class="n">fallback</span><span class="p">,</span> <span class="n">T</span> <span class="o">&amp;&amp;</span><span class="n">error</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">invocable</span><span class="o">&lt;</span><span class="n">F</span><span class="p">,</span> <span class="n">T</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fallback</span><span class="p">)(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">error</span><span class="p">));</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fallback</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>You can use the lambda variant in more complex cases, and you can define the lambda externally for more complex error handling that requires reusability.</p>
+
+<h3 id="important-edge-cases">Important edge cases</h3>
+
+<p>The more complex you make something, the merrier the room for failure.</p>
+
+<h4 id="adding-stdunexpected-if-missing">Adding std::unexpected if missing</h4>
+
+<p>To support the last implicit example, we define the metafunction:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_expected</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span> <span class="p">{};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_expected</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{};</span>
+</code></pre></div></div>
+
+<p>If you aren’t familiar with metafunctions, they are essentially small programs that run during compilation. They weren’t an explicit feature of the C++ standard initially (until type traits basically made them standardized) but a happy consequence of other features; the same goes for a popular but mostly obsolete trick you may have heard about named SFINAE. I wrote more about metafunctions <a href="http://127.0.0.1:4000/2025/11/21/template-specialization-and-concepts-in-cpp">here</a>.</p>
+
+<p>We use these in another compile-time branch:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">E</span><span class="p">&gt;</span>
+<span class="k">operator</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="k">this</span> <span class="n">Self</span><span class="o">&amp;&amp;</span> <span class="n">self</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">Storage</span><span class="o">&gt;</span><span class="p">;</span>
+
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="n">value_type</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">nullptr_t</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">static_assert</span><span class="p">(</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">default_initializable</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">,</span>
+      <span class="s">"E must be default-initializable to convert from optional failure."</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">E</span> <span class="p">{});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nf">constexpr</span> <span class="p">(</span><span class="n">_is_expected</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">value</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">value</span><span class="p">));</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="avoiding-dereference-of-void">Avoiding dereference of void</h4>
+
+<p>Notice how we are dereferencing <code class="language-plaintext highlighter-rouge">_result</code>, and that is ill-formed if the return type <code class="language-plaintext highlighter-rouge">T</code> is <code class="language-plaintext highlighter-rouge">void</code>. (Recall that we expect <code class="language-plaintext highlighter-rouge">_result</code> to be an optional or an expected.) We fix this by adding yet another compile-time check to the return before doing so. So we have to update both macros.</p>
+
+<p>C++ STL provides us the unary type trait <code class="language-plaintext highlighter-rouge">std::is_void</code> for this.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr)                                                                              \
+  ({                                                                                               \
+    auto&amp;&amp; _result {(expr)};                                                                      \
+    if (!_result) {                                                                               \
+      return ::_maybe_failure_proxy{::_get_error(_result)};                                     \
+    }                                                                                              \
+    using _container_type = std::decay_t&lt;decltype(_result)&gt;;                                     \
+    if constexpr (std::is_void_v&lt;_container_type::value_type&gt;) {                                  \
+      (void)0;                                                                                     \
+    } else {                                                                                       \
+      *std::move(_result);                                                                        \
+    }                                                                                              \
+  })
+</span>
+<span class="cp">#define maybe_2(expr, fallback)                                                                    \
+  ({                                                                                               \
+    auto&amp;&amp; _result {(expr)};                                                                      \
+    if (!_result) {                                                                               \
+      [[maybe_unused]] auto&amp;&amp; _e {::_get_error(_result)};                                       \
+      return ::_maybe_failure_proxy{::_get_result(fallback, _e)};                               \
+    }                                                                                              \
+    using _container_type = std::decay_t&lt;decltype(_result)&gt;;                                     \
+    if constexpr (std::is_void_v&lt;_container_type::value_type&gt;) {                                  \
+      (void)0;                                                                                     \
+    } else {                                                                                       \
+      *std::move(_result);                                                                        \
+    }                                                                                              \
+  })
+</span></code></pre></div></div>
+
+<p>Haha, kidding!</p>
+
+<p>This doesn’t work because in C++ <code class="language-plaintext highlighter-rouge">if</code> is a statement, not an expression, and more importantly, the statements in our conditional blocks are NOT the last statements.</p>
+
+<p>Instead, we define another helper function that returns the proper deduced type:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">_maybe_failure_proxy</span><span class="p">(</span><span class="n">T</span> <span class="o">&amp;&amp;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_maybe_failure_proxy</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">auto</span> <span class="nf">_deref_or_void</span><span class="p">(</span><span class="n">T</span> <span class="o">&amp;&amp;</span><span class="n">container</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">decltype</span><span class="p">(</span><span class="k">auto</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="k">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">decay_t</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value_type</span><span class="p">;</span>
+  <span class="k">if</span> <span class="k">constexpr</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_void_v</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">container</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>From there, it’s plug-and-play:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define maybe_1(expr)                                                          \
+  ({                                                                           \
+    auto &amp;&amp;_result{(expr)};                                                   \
+    if (!_result) {                                                           \
+      return ::_maybe_failure_proxy{::_get_error(_result)};                 \
+    }                                                                          \
+    ::_deref_or_void(std::move(_result));                                    \
+  })
+</span>
+<span class="cp">#define maybe_2(expr, fallback)                                                \
+  ({                                                                           \
+    auto &amp;&amp;_result{(expr)};                                                   \
+    if (!_result) {                                                           \
+      [[maybe_unused]] auto &amp;&amp;_e {::_get_error(_result)};                   \
+      return ::_maybe_failure_proxy{_get_result(fallback, _e)};             \
+    }                                                                          \
+    ::_deref_or_void(std::move(_result));                                    \
+  })
+</span></code></pre></div></div>
+
+<p>By the way, I was doing some research and I found that there is an old GNU extension for C specifically called <code class="language-plaintext highlighter-rouge">__builtin_choose_expr</code>, which works like this:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">__builtin_choose_expr</span><span class="p">(</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">is_void_v</span><span class="o">&lt;</span><span class="n">_val_t</span><span class="o">&gt;</span><span class="p">,</span>
+  <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span>
+  <span class="o">*</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">_result</span><span class="p">);</span>
+<span class="p">);</span>
+</code></pre></div></div>
+
+<p>This would also allow us to achieve the same thing for constant expressions. It seems like it’s not needed for C++ as it does not support it, but it’s a cool historical artifact.</p>
+
+<h4 id="nested-uses-of-maybe-expressions">Nested uses of maybe expressions</h4>
+
+<p>This already works because statement expressions automatically resolve any scoping issues we would have with macros, so you can do things like:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe</span><span class="p">(</span><span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">()));</span>
+</code></pre></div></div>
+
+<h3 id="some-conveniences">Some conveniences</h3>
+
+<p>In my actual library, I have <code class="language-plaintext highlighter-rouge">maybe_twice</code> and <code class="language-plaintext highlighter-rouge">maybe_thrice</code> to make the nesting cleaner:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe_twice</span><span class="p">(</span><span class="n">foo</span><span class="p">());</span> <span class="c1">// equivalent to maybe(maybe(foo()));</span>
+<span class="n">maybe_thrice</span><span class="p">(</span><span class="n">foo</span><span class="p">());</span> <span class="c1">// equivalent to maybe(maybe(maybe(foo())));</span>
+</code></pre></div></div>
+
+<p>Also, I made it detect nullary functors so that I don’t have to use parentheses:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">maybe_twice</span><span class="p">(</span><span class="n">foo</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>(These changes will be pushed to my repository soon.)</p>
+
+<p>I do kind of wish that we would be able to define our own operators in C++ so that I can have something like an <code class="language-plaintext highlighter-rouge">!</code> operator to invoke the basic <code class="language-plaintext highlighter-rouge">maybe</code> overload (e.g. <code class="language-plaintext highlighter-rouge">foo()!!</code>), or at least be able to use non-ASCII names for macros (e.g. <code class="language-plaintext highlighter-rouge">!(!(foo()))</code>), but it is what it is. You would get the added benefit of your code screaming at you, which is something that could prove useful from time to time.</p>
+
+<h2 id="the-turing-test">The Turing Test</h2>
+
+<p>We now support a variety of things. Here are the primary examples:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">auto</span> <span class="n">foo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{};</span> <span class="p">}</span>
+
+<span class="k">auto</span> <span class="nf">bar</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">expected</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">());</span> <span class="c1">// minimal</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">_e</span><span class="p">));</span> <span class="c1">// explicit version of above</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="n">std</span><span class="o">::</span><span class="n">unexpected</span><span class="p">(</span><span class="n">_e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span> <span class="c1">// our own</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="n">_e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">// implicit std::unexpected() wrapper</span>
+  <span class="n">maybe</span><span class="p">(</span><span class="n">foo</span><span class="p">(),</span> <span class="p">[](</span><span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">auto</span> <span class="p">{</span> <span class="k">return</span> <span class="n">e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="p">});</span> <span class="c1">// lambda variant</span>
+  <span class="k">return</span> <span class="p">{};</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="going-forward">Going forward</h2>
+
+<p>A new language construct has been proposed called <em>do expressions</em> in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2806r3.html">P2806</a>. Its purpose is to modernize and standardize statement expressions. Perhaps we will get something like this in C++29, which will make our implementation of the operator more idiomatic.</p>
+
+<h2 id="handy-tips">Handy tips</h2>
+
+<p>If you want to use this solution, here are my personal guidelines:</p>
+
+<ul>
+  <li>If you want to return a simple error, use the <code class="language-plaintext highlighter-rouge">_e</code> shortcut.</li>
+  <li>If you observe that you repeatedly use the same error in <code class="language-plaintext highlighter-rouge">maybe</code>, define a local lambda and pass it via the second argument’s overload.</li>
+  <li>If you need more complex error transformations, do them before the call to <code class="language-plaintext highlighter-rouge">maybe</code> and store the error for reuse; you can also define a namespace function if you have an error pattern repeating across several modules.</li>
+</ul>
+
+<h2 id="full-code">Full code</h2>
+
+<p>Since my website currently has bad formatting for macros, pasting the entire thing would be horror, so you can find the code and star my GitHub repository to track its progress <a href="https://github.com/quarterstar/contourcpp">here</a>.</p>
+
+<h2 id="additional-notes--honorable-mentions">Additional notes &amp; honorable mentions</h2>
+
+<p>Following my implementation, I noticed that another project, <a href="https://github.com/Rucadi/cpp-match">cppmatch</a>, from last year, implemented this by using the same compiler extension, so I wanted to give a props to them as well. Nevertheless, I made this blog post since mine works a bit differently and adds some additional features that I wanted to make a proper writeup about, like the binary overload.</p>
+
+<p>In addition, I want to give a honorable mention to effort that has been done to implement it with coroutines instead. This can be seen in a blog by <a href="https://cpp-rendering.io/c-error-handling-lets-abuse-the-co_await-operator/">cpp-rendering.io</a>. Note that this approach has had reports that there are irreducible heap allocations and issues on GCC for similar coroutine implementations, and there might be additional performance overhead that has not yet been documented.</p>
+
+<aside class="callout callout--info" role="note" aria-label="Tip">
+  <div class="callout__inner">
+    <div class="callout-header">
+      <span class="callout__icon" aria-hidden="true">ℹ️</span><strong class="callout__title">Tip</strong></div>
+
+    <div class="callout__content">
+<p>I am a freshman in university planning to continue my studies abroad in a few years. If you would like to support me, I have several donation methods on my website, and you can subscribe to my newsletter for free below.</p>
+</div>
+  </div>
+</aside>]]></content><author><name>Quarterstar</name></author><category term="cpp" /><category term="programming" /><summary type="html"><![CDATA[C++ may not be Rust, but perhaps we can learn a thing or two from how it does certain things?]]></summary></entry><entry><title type="html">The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond</title><link href="https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/" rel="alternate" type="text/html" title="The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond" /><published>2025-12-22T00:00:00+01:00</published><updated>2025-12-22T00:00:00+01:00</updated><id>https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond</id><content type="html" xml:base="https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/"><![CDATA[<h2 id="introduction">Introduction</h2>
+
+<p>This article takes a tour from the very beginning of mathematics to advanced topis with the focus being developing intuition. It’s aimed for students who do not fully understand how mathematics was discovered and the intuition behind it—this is why there is verbose wording in a lot of places.</p>
+
+<p>Initially, I wanted to split the content of this article to several ones, but I realized that the topics are so interconnected that it would be of disservice to my readers to organize it that way.</p>
+
+<p>The way I like to teach things, like you will see in this article, is with a concept called <a href="https://en.wikipedia.org/wiki/Just-in-time_learning">Just in Time Learning</a>. It was coined from programming and it means to learn things when their use comes up in an application. For example, the use of division for ratios is demonstrated right before trigonometric functions are introduced. This method, from my experience, helps recall the details that are important for active learning.</p>
+
+<p>For the people already familiar with the basics, the bread and butter of the article is the section on complex numbers and the fourier transform itself. However, in that case, I hope you enjoy reading this article more as a historic overview of mathematics itself.</p>
+
+<h2 id="numbers-numbers-and-more-numbers">Numbers, Numbers, and More Numbers</h2>
+
+<p>What is a number? Maybe 2, 4, $3^2$, even $2.5$; or if you are really fancy, maybe even negative numbers. If you are a mathematician, you might think of it as an abstract element of a structure that satisfies certain rules. No matter your viewpoint, the fact remains: the need for numbers arises from real world use cases.</p>
+
+<p>At the start of mathematics, we didn’t have negative numbers. All we had was natural numbers ($1, 2, \ldots$) that were used to count the number of apples or bananas we trade. As time passed, however, we realized that we can make useful statements if we had an indeterminate amount of them, say $x$ apples and $y$ bananas; that way, you can say that you need, for example, $x + y = 15$ of any fruit in total—it does not matter which specific combination, just that you satisfy the thing that would be later known as the equation. These equations have existed since ancient times—civilizations the likes of Babylonians, to be exact.</p>
+
+<h2 id="metaphilosophical-interjection">Metaphilosophical Interjection</h2>
+
+<p>Mathematics is really just a reflection of our perception of our world. Before continuing, you should realize that mathematics are not truly objective, in the sense that the rules we have defined or absolute, but rather rules that fit our perception of reality. In that sense, mathematics can be viewed as nothing more than a game whose rules we have all decided to follow. It isn’t any more objective than a game like monopoly. The base rules in math that we follow are called <em>axioms</em>. These axioms could in fact be anything, like our rules of counting. The “objective” part of mathematics is the results that we derive if we follow these axioms. Our logic is fallible, and often times the course of history has led to them being changed to better fit our empirical model.</p>
+
+<p>During school, you are usually taught these axioms before the motivation that fueled their initial formulation, which is precisely why you may feel confused or “forced” to do things in a particular way. The point of this article is to take the converse direction and give you that motivation.</p>
+
+<p>Now, imagine you a visually impaired person is in front of you. The assumption is that the person has never been able to in their life—as in, equivalent to being born with no eyes. Can you find a way to describe to that person who has never seen, what “seeing” looks like? Can you describe to a person born with no ears what sound is like? Most likely, you cannot find an accurate description, and if you can, it is not going to understood by such a hypothetical person.</p>
+
+<p>In a similar manner, there could be senses that humans do not know exist out there that, if we had access to, would modify our axioms significantly, and maybe even solve some of our biggest theories, like consciousness. The key takeaway from this is that mathematics is really not modeling our reality, but our cognitive perception of it.</p>
+
+<h2 id="equations">Equations</h2>
+
+<p>Now, lets return to equations. For the equation $x + y = 15$, one reasonable solution is 10 apples ($x$) and 5 bananas ($y$). Clearly 10 + 5 = 15, and claiming otherwise would lead to ambiguities and contradictions like 1 = 2. But lets say that for your exchange, you don’t have 5 bananas but you have 20 apples. It seems reasonable to give those 20 apples instead since 20 - 5 = 15. Wait, what did we just use? Subtraction? Oh yeah, that seems useful for anything related to a deficit. So we need some number to add to 20 so that it equals 15. Since we have subtraction, what if we just wrapped the operation and the number into one, like -5, and then <em>add</em> that to 20? In such case, we have 20 + (-5) = 15, and our trader is confused but satisfied nevertheless.</p>
+
+<p>And so negative numbers were invented as solutions to those equations, which later on became more useful for things like displaying the remaining debt from student loans in your bank account. Since subtracting moves a number back in the number line, it makes sense to extend the positive number line by adding negative numbers in the reverse direction.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_2_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<h3 id="neat-detail-about-equations--notations">Neat Detail about Equations &amp; Notations</h3>
+
+<p>Mathematical notation took long to be “standardized,” and it still isn’t to a large degree. Equations were no exception to this. Before the notation for them was created, when you needed to express something like $x + y = 5$, people would literally write “a quantity x and a quantity y is equal to 5.” Really makes you think how, as more and more ideas are piled up to make new concepts in mathematics, compact notation is our one and only salvation.</p>
+
+<h2 id="arithmetic-operations">Arithmetic Operations</h2>
+
+<p>As time passed, mathematics became more and more intricate. We saw that we needed to add many numbers together a constant number of times, so we invented multiplication to save us from the hustle. Division was invented with a similar argument which you should try to recall yourself.</p>
+
+<p>The subtraction that we intuitively understand is really just defined as</p>
+
+<p>\[
+a - b = a + (-b)
+\]</p>
+
+<h2 id="functions">Functions</h2>
+
+<p>Apples are cool. Numbers too, I guess. What else can numbers do?</p>
+
+<p>Well, suppose that the trader from the previous chapter received your apples and bananas and wants to cut the apples into slices—4—to make his very own apple slice collection. (Clearly, the number of slices can be 1, 2, 3, and 4.)</p>
+
+<p>Our goal is to make some sort of black box machine that takes our apples and spits out sliced apples. The quantity we care about in this case is the number of them that it produces. It will need to calculate the slices for each apple individually and then add them up. But how will the machine know when to create 1, 2, 3, or 4 slices, for each specific output?</p>
+
+<p>We have not yet specified on what grounds it will pick one of those 4 values. For now, lets assume that it always picks 4 slices for each apple. If he received 5 apples from you, based on your intuitive understanding, this is an exact case for the use of multiplication. So we have $4 \times 5 = 20$ slices in total.</p>
+
+<p>How could we represent the fact that resultant equation Y = 4X in a way that denotes that this specific equation is for this purpose? Mathematicians invented special notation for it called <em>functions</em>. We have a set of inputs—our apples—and a set of outputs—our slices. The function essentially maps each input to an output, as seen below.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_6_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>In mathematics, the way we denote a function for our case is the following:</p>
+
+<p>\[
+\operatorname{slices}(x) = 4x.
+\]</p>
+
+<p>The “slices” part is simply the name of the function and does not make it changes its behavior. You can let $y = \operatorname{slices}(x)$, which is clearly the same as the $Y = 4X$ we had before, but now with a distinctive name.</p>
+
+<p>Does the mapping of one input (in a function) have to be unique? In other words, does it make sense for this machine to be able to give two distinct outputs for a single input, depending on how it feels, if its behavior is constant like at the moment? Well, no, you usually expect a machine to give you a precise result from a particular input. In computing, we call this quality determinism. For instance, the implications of such a scenario would be that if we passed 0 apples, we wouldn’t be able to make the definitive claim that it must produce 0 slices. And in general, defining the behavior of the machine as such would have far too many problems.</p>
+
+<p>Well, you could argue that you want it to have this quality if you need it to generate a random number of slices, but we can do that in the inner machine’s computations for the outputs instead. Indeed, however, we will use a form of randomness to determine the number of slices for this example. But hold up, what even is random? We know random as an event that we cannot predict. But similarly to our former metaphilosophical interjection, one needs to realize that randomness is just a very convenient abstraction for statistically predicting systems we do not fully understand.</p>
+
+<p>In fact, the way one might generate a random number is to find a generally unpredictable source of output and somehow use it to transform our output to be within a certain bound, which in our case is 1 to 4. Such an action is called <em>normalization</em>, and we will see it in action:</p>
+
+<p>Every randomness needs a source. For this example, if our machine somehow (we don’t care in what way) calculated the number of stars that are currently glowing in some galaxy that has only 100 stars, then the “random” output would range from 0 to 100. Then, after our machine calculates that, it would need to somehow algebraically manipulate the number of apples it receives as the input to determine the number of slices. The following equation demonstrates this behavior:</p>
+
+<p>\[
+y = 1 + s \times \frac{3}{100}.
+\]</p>
+
+<p>In this case, $s$ is the number of glowing stars. The reason the “1” is outside the division is to ensure that the output is at least 1—after all, we don’t want our trader left with no slices. For the division part, consider this: if the number of glowing stars were 100, then it would produce slices(100) = 4 slices for one apple, which is the exact upper bound we want. We can’t have any more than 100 glowing stars, so this function is well defined.</p>
+
+<p>We can now create a function that takes input $x$, the number of apples, which gets multiplied by the expression equal to y.</p>
+
+<p>\[
+\operatorname{slices}(x) = (1 + s*3/100) * x.
+\]</p>
+
+<p>Notice that in this case, $s$ is not in the parentheses of the function, which means that it is constant across all $x$ inputs we give. This is because the function is <em>representing what the user interfaces with</em>. In reality, $s$ could be a function in and of itself, but in this case we don’t know how to actually calculate the number of glowing stars, so we use it as a hypothetical variable.</p>
+
+<h2 id="complex-numbers--circles">Complex Numbers &amp; Circles</h2>
+
+<p>However, one thing that remained a mystery for a while is the square root operation. First of all, the reason we call it the square root is because it is the inverse of the square, and that name comes from the area of a square in geometry— which is equal to the multiplication of any two side lengths, which are equal by definition.</p>
+
+<p>We know from school that, if you multiply a negative number by itself, you are always going to get a positive number. But have you considered why that’s the case? Think about this for a moment: if you wanted to rotate a number 180 degrees to the other side of the line—that is, draw a perpendicular line at zero and find the “mirror point” of your number (labeled x on the graph)—how would you do that?</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_8_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Consider the number 3. The mirror point, just by looking at this graph, should intuitively be -3. How could we define our number system to do that? Well, we could make it so that multiplying 3 by -1 yields -3. Multiplication is usually stated as repeated addition a certain number of times (for instance, -1 * 2 is -1 repeated 2 times, so -2), but repeating something a negative amount of times (in the case where both numbers being multiplied are negative, since you cannot swap them to form a positive number of times) does not make sense in that regard, so let’s consider this utility as a <em>rotation</em> instead. (See Appendix A for a rigorous axiomatic explanation.) In a similar manner, if we started at -3, with the same logic, we should multiply by -1 to rotate it 180 degrees to the corresponding mirror point. (It’s really a reflection about 0 until we introduce planes.) From this we can infer that our new system, for multiplication of negative numbers, strictly gives positive numbers.</p>
+
+<p>Now, about the square root: our initial definition for it is to give us the original number after it being multiplied by itself. For example, $3 \times 3 = 9$, so $\sqrt{9}$ should be 3. So for any number $1, 2, \ldots$, you should be able to get back the original value from such a multiplication. (Zero is a special case and a very peculiar number, which will get an entire article dedicated to it in the future.) What about the negative numbers which we just defined, which have been proven useful for rotations on a line? Well, let’s try one. Maybe $-3 \times -3$, which gives 9.</p>
+
+<p>Now imagine someone gives you the number 9 and, without any of the calculations that you just did, asks you to find the square root. You maybe inclined to tell the person that it is -3 since that’s the number you multiplied to get it. But then he gives you a counterexample: what about positive 3? The square root is, fundamentally speaking, a function, which we have seen gives you a unique output for each input, so it wouldn’t make sense for the square root function to give you two different results when plugging in 9. Also, the square root is especially useful in geometry, where negative side lengths for squares do not exist, so it doesn’t really make sense to say that it can give negative results. So lets restrict its output to positive numbers.</p>
+
+<p>However, one issue still stands. Suppose that someone has multipled a magic value twice and given an output of -1. Lets try to consider what could give that result. Maybe $1 \times 1$? Hmm, still 1. $1 \times (-1)$? They aren’t the same numbers, so that’s not allowed. And how about $(-1) \times (-1)$? Well, by our definition it should also give 1, so this doesn’t seem like the answer either. So what is it?</p>
+
+<p>Well, to resolve that debate, lets go back to our lovely number line. We said how multiplying by -1 gives you the number rotated 180 degrees. But why just 180 degrees? Why not, for example, half of that? Try to imagine where a number like 1 would fall if you just rotated 90 degrees, counterclockwise. Evidently, if we label the perpendicular line that we constructed with equidistant points, it should fall 1 units above the intersection point, as shown here:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_10_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Geometrically, doing two 90 degree rotations in the same direction should be the same as doing a single 180 degree rotation. Since we previously multiplied by a particular number (-1) to get the desired rotation, maybe we have to do the same here. Whatever that special value we have to multiply it with to get a 90 degree rotation is, multiplying that result by the special value again should give us the equivalent of a 180 degree rotation:</p>
+
+<p>The number that it should fall to after rotating 90 degrees has been labeled $x$, and after 90 degrees again, y.</p>
+
+<p>For the sake of a thought experiment, lets label that special value by i. Our rules for this value is that multiplying any number by it (say 1) once should give as a 90 degree rotation, and multiply the result of that by $i$ again should give us 180 degrees of rotation in total. That means it must be the result of 1 * (-1), which we know is -1. In other words, $i \times i$ (or in other words, $i^2$) is equal to -1. Even though such a number doesn’t actually exist (it isn’t something that we can naturally see like $1, 2, 3, \ldots$), pretending that it does exist gives us a lot of insight about algebraically expressing such rotations.</p>
+
+<p>Going back to our square root problem, lets think about what we had. We essentially wanted to know what the square root of a negative number should be. (Remember, it’s just the number that we multiplied by itself to get a negative result.) Hmm, since we have $i^2 = -1$, what if we say that the square root of -1 equals $i$? Congratulations, you have just discovered complex numbers. Not that complex after all, right?</p>
+
+<p>Well, we also might want the square root of -2, -3, etc. It can be proven that the square root of a product of numbers, $a$ and $b$, when $a, b \geq 0$, can be split into two square roots. Understanding why this is the case isn’t really important for the purpose of this article. So the square root of a and b is equal to the square root of a, times the square root of b. That means the square root of -2 can be split into $\sqrt{-1}$ and $\sqrt{2}$, so the result should be $i \times \sqrt{2}$. So by treating $i$ as the unit of rotation, we can get rotations for any other numbers too.</p>
+
+<p>We now have a complete system for representing intermediate rotations on our number line, and more precisely, rotations on a a plane. A plane is the space of all of the points formed by two perpendicular lines. (Interestingly enough, there are systems for representing rotations in more dimensions too, like quarternions for 3D spaces, which have 3 perpendicular lines. They follow a very similar logic to the one we used here. This might be touched on in a later article.)</p>
+
+<p>What does our rotation system remind us of? Circles! First, remember what a circle is: it is the set of all points that are equally distant from a center point. Take a look at a circle like the one shown here:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_14_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Notice how the points 1 and -1 from all axes are equally distant. It indeed makes sense to define the unit circle as having radius 1, just like we used 1 as the basis of all of our other transformations thus far.</p>
+
+<p>So how can we represent such a circle with an algebraic equations? Let’s place a circle on a plane and see what it looks like.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_16_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We can imagine this as a circle halved and so we have two halves of a circle. First of all, how can we get any point of this circle? In other words, how do we calculate the <em>distance</em> from (0, 0) to any point on a circle, (x, y)?</p>
+
+<p>This problem can be modeled using <em>right triangles</em>, which are triangles with an angle equal to 90 degrees. The angle formed by the intersection of our two perpendicular lines of the plane fits that model.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_18_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>The triangle has a vertical and horizontal line. Those lines are equal to the $x$ and $y$ position of our point on the triangle respectively. Notice what happens if we move the circle one unit to the right:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_20_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Now we have to account for a difference of 1, so instead of the lines being $x$ and $y$, they will be x - 1 and y - 1. In general, such differences will be written as $\Delta x = x - x_0$ and $\Delta y = y - y_0$.</p>
+
+<p>Notice how the legs of the triangle ($\Delta x$ and $\Delta y$) get stretched alongside the third side, which we will call the hypotenuse. (You can remember the hypotenuse as the side that is not perpendicular to any other.) You can see this as an illustration with the interactive slider below:</p>
+
+<p><strong>[SLIDER OUT OF ORDER]</strong></p>
+
+<p>A theorem known as the Pythagorean theorem indeed confirms our suspicion that the side $c$ can be expressed in terms of $a$ and $b$. In general, for any right triangle with legs $a$ and $b$ and hypotenuse $c$,</p>
+
+<p>\[
+a^2 + b^2 = c^2.
+\]</p>
+
+<p>In our case, that means the distance we are looking for, which is written $d$ instead of $c$, can simply be expressed as</p>
+
+<p>\[
+d^2 = (x - x_0)^2 + (y - y_0)^2.
+\]</p>
+
+<p>Solving for $d$, we get</p>
+
+<p>\[
+d = \pm \sqrt{(x - x_0)^2 + (y - y_0)^2}.
+\]</p>
+
+<p>Note that the square, as we explained previously, ensures distance is always nonnegative, which is geometrically sound. Also, we have two solutions for the distance as expected.</p>
+
+<p>Okay, so now we know how to get the distance from the starting point to any point on the circle. Since this guarantees to capture every point on the circle, we are done! All we need is to plug and chug the respective values for $x_0$ and $y_0$ depending on what we want our offset of the circle to be. In the general case, however, we will assume that the circle is centered for the sake of simplicitly of calculations, or in other words, $x_0 = 0$ and $y_0 = 0$, giving us</p>
+
+<p>\[
+d = \pm \sqrt{x^2 + y^2}, \quad
+x^2 + y^2 = d^2.
+\]</p>
+
+<h2 id="ratios-trigonometry--parametric-coordinates">Ratios, Trigonometry &amp; Parametric Coordinates</h2>
+
+<p>Hmm, our circle is cool and all, but it uses two variables. Is there an equation we can use to represent a circle with a single variable?</p>
+
+<p>Previously, triangles seemed pretty good at modeling the inner part of the circle, so maybe we have to use something similar to find such a relation. Perhaps there is some sort of relationship between the sides of the triangle in the circle? When mathematicians were thinking about this problem way back, they realized something:</p>
+
+<p>From algebra, we know that division can be used for resource allocation. For instance, if you have 4 kids and 8 cups of juice, $8 \div 4$ signals that 2 cups of juice should be allocated to each kid; more precisely, we say that the <em>ratio</em> of juice per kid is 2:1.</p>
+
+<p>When you hear ratio, what you should think of is not splitting items fairly but relative comparisons. For example, suppose Alice is 150 cm tall and Bob is 180cm. The ratio of their height, 180 : 150, can be simplified to 6:5. The benefit with relative comparisons is that you do not need to comprehend the true size of the unit system, but instead you simply compare its usage with other samples. In our example, the samples are centimeters. If we converted them to meters, their ratio would still be the exact same! (Try that yourself.) In fact, ratios are unit-independent—that’s one of the reasons why are so powerful. But you need to be careful and use the same units for both quantites being compared, otherwise the comparison is nonsensical.</p>
+
+<p>How does this fit to our triangle relationship problem? Well, we could try comparing the sides of it and see if we get any meaningful metrics. For instance, for this triangle:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_24_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We could first check the ratio of the two legs, 6 : 4. Observe that if the hypotenuse is stretched far out, any ratio of the legs will remain the same.</p>
+
+<p>This is… very interesting. Also, if we stretch the hypotenuse while keeping the legs the same, the triangle is no longer a right triangle! Lets investigate that further with a ratio between the hypotenuse and one of the legs. When you play with the values, you find that ratio to remain the same as well. This seems very promising and is a worthwhile candidate for our search towards a single-variable circle equation.</p>
+
+<p>Mathematicians noticed these relationships that are maintained specifically for right triangles and assigned special values to them. The ratio between the leg that the angle theta points to and the hypotenuse, for example:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_26_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>was called <em>sine</em>, later abbreviated <em>sin</em> (which is a sin in and of itself, if you ask me). And since we have demonstrated that the ratios do indeed stay the same, it can be uniquely represented with a single value, the angle $\theta$ itself! So our research totals to a function $\sin(\theta)$, where</p>
+
+<p>\[
+\sin(\theta) = \frac{\text{opposite side}}{\text{hypotenuse}}.
+\]</p>
+
+<p>(In mathematics, you will often see the notation abbreviated as $\sin \theta$, but it means the exact same thing.)</p>
+
+<p>Similarly, the following functions were defined:</p>
+
+<p>\[
+\cos \theta = \frac{\text{adjacent side}}{\text{hypotenuse}}, \quad
+\tan \theta = \frac{\text{opposite side}}{\text{adjacent side}}.
+\]</p>
+
+<p>These three functions are also called <em>trigonometric functions</em>, and since they satisfy $x^2 + y^2 = 1$, their maximum value is 1 and their minimum value is -1. (To see why: if $x^2 + \sin^2 \theta$ = 1, then $\sin^2 \theta = 1 - x^2$ and since $x^2 \geq 0$ and $1 - x^2 \leq 1$, $0 \leq \sin^2 \theta \leq 1$, and so taking square roots yields $-1 \leq \sin \theta \leq 1$ because $\sin \theta = + \sqrt{1 - x^2} \leq 1$ or $\sin \theta = - \sqrt{1 - x^2} \geq -1$)</p>
+
+<p>Remember our old friend, the distance formula? Well, you probably do because I told you about it 2 seconds ago. But anyway, before we consider how it connects to these trigonometric values, lets restrict the radius to 1 for simplicity:</p>
+
+<p>\[
+x^2 + y^2 = 1.
+\]</p>
+
+<p>(The number 1 is the assignment of $d^2$.)</p>
+
+<p>This gives us our unit circle once again. Now, lets draw a triangle inside that circle.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_28_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Clearly, the opposite side of $\theta$ is $y$ and the adjacent side is $x$. Notice that since the hypotenuse is 1, $\sin \theta = \frac{y}{1} = y$ and $\cos x = \frac{x}{1} = x$. This fact saves us the hassle of dealing with ratios, but remember that it only holds for unit circles!</p>
+
+<p>But wait, we just said $x^2 + y^2 = 1$. It follows, at least in this case, that</p>
+
+<p>\[
+(\cos \theta)^2 + (\sin \theta)^2 = 1.
+\]</p>
+
+<p>By applying some more notational magic,</p>
+
+<p>\[
+\cos^2 \theta + \sin^2 \theta = 1.
+\]</p>
+
+<p>This is huge. Massive, even. A simple fact that ratios aid relative comparisons got transformed into us finding such a useful result.</p>
+
+<p>With trivial multiplication, this can be extended to be a general result:</p>
+
+<p>\[
+k \cos^2 \theta + k \sin^2 \theta = k.
+\]</p>
+
+<p>Okay, so now we have a single-variable representation of points on a circle. What if we wanted to simplify this problem further by not having any squares or any of that jazz? Yet another old friend comes into the rescue.</p>
+
+<p>Recall that with imaginary numbers, multiplying a number (say, $b$) by $i$ gives you a rotation. Adding a real number to that, i.e. $a + bi$, can be used to represent a point, where $a$ is the point on the x-axis and $bi$ is the point on the y-axis:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_30_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>In other words, any point $(x,y)$ is represented on the complex plane with $a + bi$. If we combine that with the fact that any point on a unit circle $(x,y) = (cos \theta, sin \theta)$, we find that</p>
+
+<p>\[
+z = cos \theta + i sin \theta
+\]</p>
+
+<p>is the corresponding point of the circle on the complex plane.</p>
+
+<h2 id="natural-logarithm-e--eulers-formula">Natural Logarithm, e &amp; Euler’s Formula</h2>
+
+<p>In the late 1500s to early 1600s, astronomers and navigators had to compute stupidly large numbers like $(1.00023)^{7423}$ or multiply many large numbers repeatedly. This was very annoying to say the least, so the dream was to replace multiplication with addition.</p>
+
+<p>John Napier was one of those mathematicians. To help progress this search, he researched a lot of sequences. What he found was that there is a connection between arithmetic progressions and geometric decay. For example, he placed the sequence of natural numbers in one table</p>
+
+<p>\[
+0, 1, 2, 3, \ldots
+\]</p>
+
+<p>and the geometric decay in another:</p>
+
+<p>\[
+1, 0.9999999, 0.9999998, 0.9999997, \ldots
+\]</p>
+
+<p>This is a pair of two evolving quantities. Napier defined the logarithm as the <em>index</em> that connects the two. (For example, in a sequence 2, 4, 6, 8, …, the number 6 is located at index 3.)</p>
+
+<p>Suppose you have:</p>
+
+<p>\[
+x = (1 - \varepsilon)^n
+\]</p>
+
+<p>Then:</p>
+
+<p>\[
+\log(x) = n
+\]</p>
+
+<p>By multiplying two numbers:</p>
+
+<p>\[
+x_1 x_2 = (1 - \varepsilon)^{n_1 + n_2}
+\]</p>
+
+<p>So</p>
+
+<p>\[
+\log(x_1 x_2) = \log(x_1) + \log(x_2).
+\]</p>
+
+<p>This property was the entire point of the link between the two sequences. Now, instead of decay, if you imagine growth:</p>
+
+<p>\[
+(1 + \varepsilon)^n
+\]</p>
+
+<p>As $\varepsilon$ gets smaller and $n$ gets larger in just the right way, the expression stabilizes. If we let $\varepsilon = \frac{1}{n}$, then we get</p>
+
+<p>\[
+(1 + \frac{1}{n})^n.
+\]</p>
+
+<p>You can see the table of values of this function approach a value:</p>
+
+<ul>
+  <li>$n = 10$: 2.594</li>
+  <li>$n = 100$: 2.705</li>
+  <li>$n = 1000$: 2.717</li>
+  <li>$n = 10000$: 2.718</li>
+</ul>
+
+<p>This number kept appearing, regardless of the table’s construction. He tried many sequences besides these two and the results always matched. The number that it approached was later named $e$:</p>
+
+<p>\[
+e = \lim_{n \to \infty} (1 + \frac{1}{n})^n
+\]</p>
+
+<p>The “lim” is an operator that tells you what value you see a function get close to as you increase the input $n$. It’s going to be used a lot in following chapters.</p>
+
+<p>This number $e$ is commonly used for compound interest, calculating the growth of populations, the cooling laws of physics, and many more fields.</p>
+
+<p><strong>This part is not finished.</strong></p>
+
+<h2 id="division-by-zero--limits-in-more-detail">Division by Zero &amp; Limits in More Detail</h2>
+
+<p>Your middle school teacher probably taught you that division by zero is a big no-no. But why is that the case? Lets check what happens when we divide 10 by integers that get smaller and smaller.</p>
+
+<ul>
+  <li>$10 \div 10 = 1$.</li>
+  <li>$10 \div 9$ = 1.111…</li>
+  <li>$10 \div 8$ = 1.25.</li>
+  <li>…</li>
+  <li>$10 \div 3 = 3.333…$</li>
+  <li>$10 \div 2 = 5$</li>
+  <li>$10 \div 1 = 10$.</li>
+</ul>
+
+<p>No matter what, as we go lower and lower, the value increases. The result is only going to start to decrease if we go even lower, to negative values:</p>
+
+<ul>
+  <li>$10 \div (-1) = -10$</li>
+  <li>$10 \div (-2) = -5$</li>
+  <li>$10 \div (-3) = -3.333…$</li>
+</ul>
+
+<p>If we focus on one of these particular divisions by positive or negative values, like $10 \div 2$ which equals 5, we notice that the function “wraps” around that value for very small differences, from both sides. For example, from the right side:</p>
+
+<ul>
+  <li>$10 \div 2.01 \approx 4.975.$</li>
+  <li>$10 \div 2.001 \approx 4.998.$</li>
+  <li>$10 \div 2.0001 \approx 4.999.$</li>
+</ul>
+
+<p>And from the left side:</p>
+
+<ul>
+  <li>$10 \div 1.99 \approx 5.025$</li>
+  <li>$10 \div 1.999 \approx 5.0025$</li>
+  <li>$10 \div 1.9999 \approx 5.00025$</li>
+</ul>
+
+<p>So in fact, if we had chosen any number for division other than 2, we will see the division wrap around the result of it for arbitrarily small differences from either side.</p>
+
+<p>Lets analyze division by 0 and see if the same happens. From the right side:</p>
+
+<ul>
+  <li>$10 \div 0.01 = 1000$</li>
+  <li>$10 \div 0.001 = 10000$</li>
+  <li>$10 \div 0.0001 = 100000$</li>
+</ul>
+
+<p>And again, from the left side:</p>
+
+<ul>
+  <li>$10 \div (-0.01) = -1000$</li>
+  <li>$10 \div (-0.001) = -10000$</li>
+  <li>$10 \div (-0.001) = -100000$</li>
+</ul>
+
+<p>So in fact, the division does <em>not</em> wrap around a particular value for division by very small differences from 0. This means we cannot be confident about what value the operation stabilizes to in order to be able to define division by zero.</p>
+
+<p>Why does this happen? We saw before that for negative values, the function actually decreases, and since 0 is the “limit” point of where the function’s behavior is increasing or decreasing for the division, so it makes sense why this is treated as an undefined point for division.</p>
+
+<p>To be precise, we conclude that if we approach 0 with very small differences from the positive side, the division goes to infinity, and if we approach 0 with very small differences from the negative side, the division goes to negative infinity. This is also why “infinity” isn’t actually a number but rather an idea; that something keeps on increasing or decreasing without bound, so the “negative” infinity that you see with a minus isn’t literally multiplying by $-1$.</p>
+
+<p>This idea of limit points is formalized with the operator we saw before — the limit. There are right-side limits and left-side limits, denoted with + and - respectively above the value being approached. Based on our analysis, we can clearly see that</p>
+
+<p>\[
+\lim_{x \to 2^+} \frac{10}{x} = 5, \quad 
+\lim_{x \to 2^-} \frac{10}{x} = 5.
+\]</p>
+
+<p>This is read like, “as the input x approaches 2, 10/x approaches 5 from both the right and left side.” Furthermore,</p>
+
+<p>\[
+\lim_{x \to 0^+} \frac{10}{x} = \infty, \quad 
+\lim_{x \to 0^-} \frac{10}{x} = - \infty.
+\]</p>
+
+<p>However, don’t assume that the limit existing means you can evaluate the function at that point. For example, if you have</p>
+
+<p>\[
+f(x) = \frac{x^2 - 1}{x - 1}
+\]</p>
+
+<p>and you want to know the limit of it as $x$ approaches 1, then if you analyze the limit using the same approximation technique and check what value it wraps around, you find that</p>
+
+<p>\[
+\lim_{x \to 1} f(x) = 2.
+\]</p>
+
+<p>However, calling the function with $x = 1$ gives us division by zero, which is undefined:</p>
+
+<p>\[
+f(1) = \frac{1^2 - 1}{1 - 1} = \frac{0}{0}.
+\]</p>
+
+<p>Also, limits can sometimes simply be inferred by looking at the graph of the function:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_32_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Therefore the limit at $x = 1$ exists but $f(1)$ itself is not the number it approaches.</p>
+
+<p>Limits can also be computed with algebraic tricks. For example, we see that</p>
+
+<p>\[
+\lim_{x \to 1} f(x) = \lim_{x \to 1} \frac{x^2 - 1}{x - 1} = \lim_{x \to 1} \frac{(x-1)(x+1)}{x-1} = \lim_{x \to 1} (x + 1) = 2.
+\]</p>
+
+<p>So to wrap things up (no pun intended), division by zero is undefined, and one informal way is to check how the operation you are interested in behaves for very small differences and if it wraps around a particular value (it doesn’t have to be division; it could be anything). And if you want to be 100% sure that your approximation is not misleading or incorrect, you use algebra to rigorously calculate the limit.</p>
+
+<h2 id="rate-of-change--derivatives">Rate of Change &amp; Derivatives</h2>
+
+<p>In a previous chapter, we discussed functions. One thing that we might want is a reliable metric that tells us how fast a function changes in a particular range of inputs. For instance, let $f(x) = x$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_34_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Let us take any two positions, $a = 2$ and $b = 4$. So we are interested in how quickly the function changes inputs in the range of values between $a$ and $b$. Looking at the function’s graph, we see that the function grows exactly the same for any range that we choose, regardless if the particular $a$ and $b$ we choose. So when defining this “rate of change,” it should remain constant.</p>
+
+<p>Really, we are interested in a relative comparison of the input and the output of the function during that range. We know from previous chapters that the way to calculate that difference is $b - a$ and $f(b) - f(a)$ for the inputs and outputs, respectively.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_36_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Now, recall that ratios are a great way to gain a relative measure for comparing two quantities, regardless of the metric system used and the size of other quantities in the same system. So we can find the relative difference with the formula</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a}.
+\]</p>
+
+<p>Why did we put $f(b) - f(a)$ at the top and not at the bottom? Because when that value increases we want the rate of change of the function in the interval from $a$ to $b$ to increase, and conversely, decrease when $f(b) - f(a)$ decreases.</p>
+
+<p>If we try this for our values, we find that</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} = \frac{4 - 2}{4 - 2} = 1.
+\]</p>
+
+<p>is our desired rate of change. And in fact, the rate of change “1” remains constant for any $a$ and $b$.</p>
+
+<p>We can try this formula with other functions as well. Let $g(x) = x^2$ be an exponential function and use the same $a$ and $b$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_38_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Then we find that</p>
+
+<p>\[
+\frac{g(b) - g(a)}{b - a} = \frac{4^2 - 2^2}{4 - 2} = \frac{16 - 4}{4 - 2} = 6,
+\]</p>
+
+<p>which does <em>not</em> remain constant if we make other choices of $a$ and $b$. This can be seen in the graph since the functions output explodes for large inputs.</p>
+
+<p>Why restrict the idea of “rate of change” to intervals? Say we want to know how the function behaves at a particular point $a$. Then in our formula, we could set $b$ be addition to it like $0.001$ to get a very small measure. So we set $b = a + 0.001$ and we try $a = 3$:</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} = \frac{f(3.001) - f(3)}{3.001 - 3} = 6.001.
+\]</p>
+
+<p>This doesn’t seem much, but repeating the process for larger values reveals that the rate of change is increasing very fast. For example, $a = 100$:</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} = 200.001.
+\]</p>
+
+<p>We have a constant $0.001$ at the end because of our choice for $b$, so we could make our formula subtract it after the addition to make the rate of change look a little bit nicer. Since so far our selection has been $b = a + 0.001$, lets generalize this by setting $b = a + h$, where $h$ is a very small constant. Then our formula becomes</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} - h.
+\]</p>
+
+<p>It can be simplified further:</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} - h = \frac{f(a + h) - f(a)}{(a + h) - a} - h.
+\]</p>
+
+<p>So in the end we have:</p>
+
+<p>\[
+\frac{f(a + h) - f(a)}{h} - h.
+\]</p>
+
+<p>Now we have the rate of change of the function at a particular point with a very small difference, so we could call it the “pointwise” rate of change (or in standard texts, instantaneous rate of change). Lets denote this operation with a special name:</p>
+
+<p>\[
+f’(x) = \frac{f(a + h) - f(a)}{h} - h.
+\]</p>
+
+<p>There is one problem with the current variation of this formula, however. Consider $h(x) = -x^2$. Then for $a = 10$ and $b = a + 0.001$,</p>
+
+<p>\[
+\frac{h(10.001) - h(10)}{10.001 - 10} = -20.001,
+\]</p>
+
+<p>and adding 0.001 to it makes it -20.002 rather than a nice -20, so our initial oversimplification of the solution being just subtracting h is not correct. However, we will see that this does not change the notion of our formula at all.</p>
+
+<p>In general, for the pointwise rate of change, we care about extremely small differences only; infinitesimally small. So instead of having h be a chosen constant, we can let it be a limit:</p>
+
+<p>\[
+f’(x) = \lim_{h \to 0} (\frac{f(a + h) - f(a)}{h} - h).
+\]</p>
+
+<p>Notice how the division grows independently and far larger from the subtraction $h$, so as $h$ approaches 0, that subtraction actually vanishes:</p>
+
+<p>\[
+f’(x) = \lim_{h \to 0} \frac{f(a + h) - f(a)}{h}
+\]</p>
+
+<p>Let us call $f’(x)$ the <em>derivative</em>. The property of the limit we just discovered can be generalized to this: for <em>any</em> function $f(x)$ and $g(x)$,</p>
+
+<p>\[
+\lim_{x \to c} (f(x) + g(x)) = \lim_{x \to c} f(x) + \lim_{x \to c} g(x).
+\]</p>
+
+<p>Finally, if you use a limit calculator, you find that</p>
+
+<p>\[
+h’(a) = h’(10) = -20,
+\]</p>
+
+<p>so this verifies that our problem has been fixed without actually needing to address the issue.</p>
+
+<p>As one final note, if you go back to the examples of the early version of the derivative for $g(x)$, our approximation were very close to the value of $2x$ but with $x = a$. In fact, it can be proven that</p>
+
+<p>\[
+g’(x) = 2x,
+\]</p>
+
+<p>so you don’t need to deal with limits at all! You can verify this by manually computing it for any value:</p>
+
+<p>\[
+g’(2) = \lim_{h \to 0} \frac{g(2 + h) - g(2)}{h} = \lim_{h \to 0} \frac{(2 + h)^2 - 2^2}{h} = \lim_{h \to 0} \frac{4 + 4h + h^2 - 4}{h} = \lim_{h \to 0} \frac{h(4 + h)}{h}.
+\]</p>
+
+<p>So it simplifies to:</p>
+
+<p>\[
+g’(2) = \lim_{h \to 0} (4 + h) = 4.
+\]</p>
+
+<p>Our takeaway from this: besides the fact that we have a nice pointwise rate of change formula, miniscule differences with limits usually abstract away and contribute nothing in the long run. That’s one of the reasons limits are very powerful.</p>
+
+<h2 id="areas-of-functions--integrals">Areas of Functions &amp; Integrals</h2>
+
+<p>What does area actually represent in mathematics? Imagine you have a chess board. The chess board has rows 1, 2, 3, all the way to 8 and similarly columns 1, 2, 3, all the way to 8.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_40_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>This means that, with multiplication, we find that the total number of slots for pieces are $8 \times 8$. This covers every single possible combination of row and column. So the value $8 \times 8$ could be considered the <em>area</em> of the board.</p>
+
+<p>Notice that the value we can set for the row and column position is <em>discrete</em>. For example, we can’t say row 4.5 and column $\sqrt{2}$. In other words, we only accept integer values.</p>
+
+<p>In mathematics, we extend this idea for real numbers as well. But notice how we cannot describe the area when talking about real positions as the number of possible coordinates $(x, y)$ we can position in the shape, because the number of decimals for any real number is infinite, so we would have infinite such coordinates. (For example, for the integer 4, some decimal positions are 4.1, 4.01, 4.001, 4.0001, …) Instead, how you should think about it is that it “fills” the entire area of the geometric shape.</p>
+
+<p>What is the area of a square? Take, for example, the square shape below.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_42_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We can see that each of the side lengths is 4, so the area should be $4 \times 4 = 16$.</p>
+
+<p>What if we cut the square diagonally?</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_44_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>This forms two right triangles. To calculate the area of each, thinking about the area of the shape as the total that fills it, it’s only natural to halve it. So the area of each triangle is $4 \times 4 \times \frac{1}{2} = 8$. In general, we can calculate the area of any right triangle with legs $a$ and $b$ with $a \times b \times \frac{1}{2}$.</p>
+
+<p>Now pay close attention to this example. Let $f(x) = x + 1$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_46_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We want a general formula for the area of $f(x)$ — specifically, the part from the triangle formed starting from $x = 1$ and some arbitrary point $x_0$ with $x_0 &gt; 1$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_48_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Because of the offset of 1, the base of the triangle will be $x - 1$. The height of the triangle is just $f(x)$, so our area is</p>
+
+<p>\[
+A(x) = \frac{1}{2} (x - 1)(x + 1) = \frac{1}{2} x^2 - x + \frac{1}{2}
+\]</p>
+
+<p>Nothing out of the ordinary. However, observe what happens if you compute the derivative:</p>
+
+<p>\[
+A’(x) = x - 1.
+\]</p>
+
+<p>It is simply the original function! Why is this happening? Our observation is that the derivative of the area of a function is equal to the function itself.</p>
+
+<p>If we have a more complicated function like $x^2$, which is not linear, calculating its area for specific intervals is going to be difficult. Could we perhaps find a way to generalize this result to compute areas under curves?</p>
+
+<p>From our example, we could define such an operator with the $\int$ symbol and name it <em>the integral from $x$ to $x_0$</em>. Then we have</p>
+
+<p>\[
+\int_x^{x_0} f(x) = A(x).
+\]</p>
+
+<p>So the first integration rule we have discovered is</p>
+
+<p>\[
+\int (x - 1) = \frac{1}{2} (x - 1)^2.
+\]</p>
+
+<p>If you follow the exact same steps with $f(x) = x$ instead, you find that</p>
+
+<p>\[
+\int x = \frac{1}{2} x^2.
+\]</p>
+
+<p>What other rules exist? Integration appears to be the opposite of differentiation, and inverse operations in mathematics are generally more difficult. Finding the exact formula for an integral without an approximation technique is generally difficult, so for this reason mathematicians have developed a set of integration rules that are applied systematically to compute the integral. These rules could have been found simply by differentiating random functions based on your intuition, to make them equal to the desired area.</p>
+
+<p>Surprisingly, an approximation technique will let us formalize the definition of an integral. Consider the $f(x)$ again but partitioned into many blocks. These blocks have height equal to f(x).</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_50_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We might not be able to compute areas of complicated functions with standard area shape formulas, but by creating these blocks, we can calculate each individually and then sum them up to get an estimate of the area. This means the smaller the blocks, the more accurate the approximation.</p>
+
+<p>To do so, we will start with a function $f(x) = x^2$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_52_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>To be able to sum the up smoothly, the width of each block is equal. Let $t$ be the width of the interval that we are interested the area of. If we were interested in a particular range, it would be $b - a$. Then the width of each block is $\frac{t}{n}$, where $n$ is the number of blocks we want. Lets call it $\Delta x$.</p>
+
+<p>\[
+\Delta x = \frac{t}{n}.
+\]</p>
+
+<p>This evenly slices it for each block.</p>
+
+<p>For a practical demonstration, let $n = 5$ and $t = 10$. Then</p>
+
+<p>\[
+\Delta x = \frac{10}{5} = 2.
+\]</p>
+
+<p>So the interval $[0, 10]$ is divided into the subintervals:</p>
+
+<p>\[
+[0, 2], [2, 4], [4, 6], [6, 8], [8, 10].
+\]</p>
+
+<p>Now there is a crucial decision for us to make. We need to choose which point we will use to calculate the height of each subinterval’s block. It doesn’t matter which point we choose as long as we keep the choice the same for all subintervals.</p>
+
+<p>For example, if we pick the rightmost point of each subinterval, then for each one, our choices would be</p>
+
+<p>\[
+x^{\ast}_1 = 2, x^{\ast}_2 = 4, x^{\ast}_3 = 6, x^{\ast}_4 = 8, x^{\ast}_5 = 10.
+\]</p>
+
+<p>The use of asterisk to denote these special variables is merely a stylistic choice and there isn’t a particular reason they are used.</p>
+
+<p>With these choices, the area of the first block, for instance, would be</p>
+
+<p>\[
+f(x^{\ast}_i) \cdot \Delta x.
+\]</p>
+
+<p>Remember that $\Delta x$ is the base and that $f(x^*_i)$ is the height. So we can do the same for the rest of the blocks and get an approximation of the area under the curve.</p>
+
+<p>\[
+\int_0^{10} f(x) \approx \Delta x (f(x^{\ast}_1) + f(x^{\ast}_2) + f(x^{\ast}_3) + f(x^{\ast}_4) + f(x^{\ast}_5)).
+\]</p>
+
+<p>This result can be generalized. When we have a sum in mathematics like</p>
+
+<p>\[
+1 + 2 + 3 + \ldots + n
+\]</p>
+
+<p>we can denote it as</p>
+
+<p>\[
+\sum_{i=1}^n i.
+\]</p>
+
+<p>The $i = 1$ is the initial value of the variable. The expression in front of the Greek letter $\Sigma$ is what is being added each time. It gets added up until $i$ reaches $n$.</p>
+
+<p>So our previous expression can be simplified to</p>
+
+<p>\[
+\int_0^{10} f(x) \approx \Delta x \sum_{i=1}^5 f(x^{\ast}_i)
+\]</p>
+
+<p>We don’t need to restrict it to sums of 5 blocks:</p>
+
+<p>\[
+\int_0^{10} f(x) \approx \Delta x \sum_{i=1}^n f(x^{\ast}_i),
+\]</p>
+
+<p>where $n$ is the number of blocks that were chosen as before.</p>
+
+<p>Then we apply the same idea that we did for the derivative where we made it shrink $h$ to 0, but here, we are gonna make the number of blocks grow without bound instead. That way, it is no longer an approximation but instead precisely equal to the integral itself. So we have</p>
+
+<p>\[
+\int_0^{10} f(x) = \lim_{n \to \infty} \Delta x \sum_{i=1}^n f(x^{\ast}_i),
+\]</p>
+
+<p>and more generally,</p>
+
+<p>\[
+\int_a^b f(x) = \lim_{n \to \infty} \Delta x \sum_{i=1}^n f(x^{\ast}_i),
+\]</p>
+
+<p>where $\Delta x = \frac{b - a}{n}$.</p>
+
+<p>Not only have we obtained a great approximation method, but we have a sufficiently rigorous definition of an integral now. Our updated view of an integral is the sum of blocks that partition a function $f(x)$ into equal subintervals, where the blocks become more and more.</p>
+
+<p>Before we continue, ask yourself this question to see if you truly understand what the limit does here: If we made $n$ smaller and smaller instead of larger and larger, what would happen to our approximation?</p>
+
+<p>Now, notice that since it is a sum of blocks, and more specifically, it is a sum of products of bases and heights. In fact, since $\Delta x$ is a variable defined based on $n$, when the base becomes really really small (as in $n \to \infty$), we refer to it as $dx$ instead. So you can imagine it (not literally the same) as</p>
+
+<p>\[
+dx = \lim_{\Delta x \to 0} \Delta x.
+\]</p>
+
+<p>The reason this convention was made was to be used directly inside the definition of the integral. Our integral notation $\int f(x)$ at the moment does not hint to us what variable is constant (for example, we could have $\int axyz$) and what is the actual one, so it is written as</p>
+
+<p>\[
+\int_a^b f(x)\, dx
+\]</p>
+
+<p>instead.</p>
+
+<p>Unfortunately, going deeper into how one finds a solution for an integral without reverse engineering it with the derivative would require more advanced knowledge from real analysis to decomposite it into its logical lower-sum and upper-sum definition, which is beyond the scope of this article, so our investigation on the rigor of it must be put at a stop here. The good news is that with our intuitive understanding of trigonometric functions, $e$, complex numbers, and differentiation/integration, we are ready to see much more advanced concepts.</p>
+
+<h2 id="the-fourier-transform">The Fourier Transform</h2>
+
+<p><strong>This section is under construction.</strong></p>
+
+<p>The main question the Fourier transform wanted to answer is: If a signal is made of waves, what waves are they, and how strong is each one?</p>
+
+<p>In other words, it decomposes the function and finds its recipe; it transforms a function from the time/space domain to the frequency domain.</p>
+
+<p>As an analogy, consider what happens when you hear a chord. You only hear one sound, but it is actually made of different notes, each one having its own pitch (called the frequency), and its own “loudness” (amplitude). Your brain automatically decomposes that chord, but Fourier does it mathematically.</p>
+
+<p>A signal is represented as a function of time, $f(t)$, and the Fourier transform transforms it into a frequency as $F(\omega)$. So instead of asking how much is the value at time $t$, you ask how much frequency $\omega$ is present.</p>
+
+<p>The reason sine/cosine waves are used is because they are perfectly smooth, repeat forever, and combine to approximate almost any signal. If you are familiar with the Taylor series, it uses the exact same idea but instead with a special kind of polynomial approximation. Sine/cosine waves will be more generally referred to as sinusoids.</p>
+
+<p>Its formula is</p>
+
+<p>\[
+F(\omega) = \int_{- \infty}^\infty f(t) e^{-i \omega t}\, dt
+\]</p>
+
+<p>It’s really just multipling by a complex wave $e^{-i \omega t}$ and then integrating to measure similarity. $e^{-i \omega t}$ traces a circle where the speed of rotation is the frequency $\omega$ and the radius its amplitude. So if we draw it as $t$ increases, a high frequency means a fast spinning circle, a low frequency means a slow spinning circles, a negative frequency means opposite direction, and zero frequency means constant point. This is useful because a circle is the geometric representation of a sinusoid.</p>
+
+<p>We can see this better by recalling Euler’s identity:</p>
+
+<p>\[
+e^{i \omega t} = cos(\omega t) + i sin(\omega t)
+\]</p>
+
+<h2 id="appendix">Appendix</h2>
+
+<h3 id="a--axioms-of-real-numbers">A — Axioms of Real Numbers</h3>
+
+<p>In algebra, the real numbers (2, 4.5, 2.222 repeating) are rigorously defined with a set of axioms. Some of these are:</p>
+
+<ul>
+  <li>Distributivity: $a \cdot (b + c) = a \cdot b + a \cdot c$</li>
+  <li>Multiplicative identity: $1 \cdot a = a$</li>
+  <li>Additive inverse: For every $a$, there exists $-a$ such that $a + (-a) = 0$.</li>
+</ul>
+
+<p>These can be used to extend the real number line to include negative numbers. We define -1 as the additive inverse of 1:</p>
+
+<p>\[
+1 + (-1) = 0.
+\]</p>
+
+<p>Now, using distributivity:</p>
+
+<p>\[
+0 \cdot 1 = (1 + (−1)) \cdot 1 = 1 \cdot 1 + (−1) \cdot 1.
+\]</p>
+
+<p>We know $0 \cdot 1 = 0$ and $1 \cdot 1 = 1$, so</p>
+
+<p>\[
+0 = 1 + (-1) \cdot 1
+\]</p>
+
+<p>implies</p>
+
+<p>\[
+(-1) \cdot 1 = -1.
+\]</p>
+
+<p>For multiplying a negative by another negative, we want $(-1) \cdot (-1)$. Again, we start from distributivity:</p>
+
+<p>\[
+0 = (-1) \cdot 0 = (-1) \cdot (1 + (-1)) = (-1) \cdot 1 + (-1) \cdot (-1).
+\]</p>
+
+<p>We know $(-1) \cdot 1 = -1$, so</p>
+
+<p>\[
+0 = -1 + (-1) \cdot (-1)
+\]</p>
+
+<p>implies</p>
+
+<p>\[
+(-1) \cdot (-1) = 1. \blacksquare
+\]</p>
+
+<h2 id="credits">Credits</h2>
+
+<ul>
+  <li><a href="https://wallpapercave.com/the-universe-wallpaper">Universe Wallpaper</a></li>
+</ul>]]></content><author><name>Quarterstar</name></author><summary type="html"><![CDATA[Introduction]]></summary></entry><entry><title type="html">Template Specialization &amp;amp; Concepts in C++</title><link href="https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp/" rel="alternate" type="text/html" title="Template Specialization &amp;amp; Concepts in C++" /><published>2025-11-21T00:00:00+01:00</published><updated>2025-11-21T00:00:00+01:00</updated><id>https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp</id><content type="html" xml:base="https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp/"><![CDATA[<p>If you come from Rust, you might miss the value of traits. Thankfully, C++ has something very similar to them. Suppose you are creating your own vector type (for the thousandth time). You probably do something like:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Vector3</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Vector3</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<h2 id="template-specialization">Template Specialization</h2>
+
+<p>C++ has a feature called template specialization that allows you to specify behavior for particular instances of the template:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Foo</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="kt">void</span> <span class="n">display</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">"General template"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Foo</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="kt">void</span> <span class="n">display</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">"Specialized for int"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The C++ compiler knows that you are specifying a specialization when you use empty <code class="language-plaintext highlighter-rouge">&lt;&gt;</code>. If you want to be really fancy, you might use it for your vector class like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector2</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">Base</span><span class="p">;</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector3</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector3</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector4</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">w</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector4</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+</code></pre></div></div>
+
+<p>Since inheritance (which is a runtime mechanism) and templates (which are a compile-time mechanism) don’t go well together, we have applied CRTP. But a problem still remains: how do we ensure that the user of our user supplies correct types? In our case, the ones that make sense are integers and floats.</p>
+
+<p>This is where concepts come in. For the basic types like <code class="language-plaintext highlighter-rouge">int</code>, <code class="language-plaintext highlighter-rouge">unsigned int</code>, and so on, the C++ standard groups them under one general name called <em>integral types</em>.</p>
+
+<h2 id="concepts">Concepts</h2>
+
+<p>The exact implementation of the things that we will discuss ultimately depend on the C++ implementation by the compiler, but we will use some basic patterns that are common across all of them. Conceptually, <code class="language-plaintext highlighter-rouge">std::is_integral</code>, which is a utility for determining whether a type is one of the integrals, is defined like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span> <span class="p">{</span> <span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">signed</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, <code class="language-plaintext highlighter-rouge">std::false_type</code> is what is known as a <em>type trait</em>. Type traits are compile-time tools that allow you to ask questions about a particular type. Most type traits are implemented with a static boolean member <code class="language-plaintext highlighter-rouge">value</code>, which is precisely what <code class="language-plaintext highlighter-rouge">std::false_type</code> does:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">false_type</span> <span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">type</span> <span class="o">=</span> <span class="n">false_type</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>You can probably guess the implementation of <code class="language-plaintext highlighter-rouge">std::true_type</code> based on this as well. The idea is that if we make specializations inherit <code class="language-plaintext highlighter-rouge">std::true_type</code> instead, the base <code class="language-plaintext highlighter-rouge">value</code> becomes true, which allows the compiler to do some type checking we will see just in a second.</p>
+
+<p>Any type that inherits from a type trait is also a type trait. Consequently, <code class="language-plaintext highlighter-rouge">std::is_integral</code> is a type trait.</p>
+
+<p>The value of a type trait is often abbreviated with <code class="language-plaintext highlighter-rouge">_v</code> prefixes in the standard library:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">is_integral_v</span> <span class="o">=</span> <span class="n">is_integral</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Now, where do concepts come in play? Concepts allow constraining template parameters with semantic rules defined by type traits. That means if we define:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">concept</span> <span class="n">integral</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">is_integral_v</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>And use the concept in place of our <code class="language-plaintext highlighter-rouge">typename</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The compiler, fundamanentally speaking, will evaluate the boolean condition at compile-time. If it is false, you will get a compilation error. We can make the rest of our vector implementation use this concept:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector2</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">Base</span><span class="p">;</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector3</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector3</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector4</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">w</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector4</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+</code></pre></div></div>
+
+<p>You will now notice that, in the following code:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdfloat&gt;</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">"vector.hpp"</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// this is OK</span>
+  <span class="k">auto</span> <span class="n">a</span><span class="p">{</span><span class="n">Vector4</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">float32_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">0.5f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">0.5f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">1.0f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">1.0f</span><span class="mi">32</span><span class="p">}};</span>
+
+  <span class="c1">// this fails to compile because the constraints are not satisfied</span>
+  <span class="k">auto</span> <span class="n">b</span><span class="p">{</span><span class="n">Vector4</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span><span class="s">"A"</span><span class="p">,</span> <span class="s">"B"</span><span class="p">,</span> <span class="s">"B"</span><span class="p">,</span> <span class="s">"C"</span><span class="p">}};</span>
+  
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>So concepts let us have these compile-time guarantees that were impossible before C++20.</p>
+
+<p>Now that you understand how they work and how to use them, enjoy applying them to your codebase (if you don’t have a 32 year old monolith stuck in C++11). Below is a small list of them.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">std::copyable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is copy-constructible and copy-assignable.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::movable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is move-constructible and move-assignable.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::equality_comparable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> supports <code class="language-plaintext highlighter-rouge">==</code> and <code class="language-plaintext highlighter-rouge">!=</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::totally_ordered&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> Supports <code class="language-plaintext highlighter-rouge">&lt;</code>, <code class="language-plaintext highlighter-rouge">&lt;=</code>, <code class="language-plaintext highlighter-rouge">&gt;</code>, <code class="language-plaintext highlighter-rouge">&gt;=</code>, <code class="language-plaintext highlighter-rouge">==</code>, and <code class="language-plaintext highlighter-rouge">!=</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::default_initializable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be default-constructed (T t{} or T t;).</li>
+  <li><code class="language-plaintext highlighter-rouge">std::destructible&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be destroyed with a destructor.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::assignable_from&lt;T, U&gt;</code>: Can assign a value of type <code class="language-plaintext highlighter-rouge">U</code> to a variable of type <code class="language-plaintext highlighter-rouge">T</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::same_as&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> and <code class="language-plaintext highlighter-rouge">U</code> are exactly the same type.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::derived_from&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is derived from <code class="language-plaintext highlighter-rouge">U</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::convertible_to&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be implicitly converted to <code class="language-plaintext highlighter-rouge">U</code>.</li>
+</ul>]]></content><author><name>Quarterstar</name></author><category term="cpp" /><category term="programming" /><summary type="html"><![CDATA[New C++23 feature known as concepts presents new compile-time opportunities]]></summary></entry><entry><title type="html">Understanding the Nix Store by Hunting Packages Down</title><link href="https://www.quarterstar.tech/articles/understanding-the-nix-store-by-hunting-packages-down/" rel="alternate" type="text/html" title="Understanding the Nix Store by Hunting Packages Down" /><published>2025-10-26T00:00:00+02:00</published><updated>2025-10-26T00:00:00+02:00</updated><id>https://www.quarterstar.tech/articles/understanding-the-nix-store-by-hunting-packages-down</id><content type="html" xml:base="https://www.quarterstar.tech/articles/understanding-the-nix-store-by-hunting-packages-down/"><![CDATA[<p>In NixOS, packages installed on the system do not follow the standard Linux filesystem hierarchy. I see this nonstandard approach perplex newcomers who are not familiar with it in a practical way. Thankfully, Nix(OS) provides a set of utilities to traverse its special quirks, in the form of commands. This article focuses on such commands, the motivation behind using them, and how they relate to the Nix store. It also aims to show (partially) why it is designed this way by using concrete examples.</p>
+
+<p>By the end of this, you will know how to effectively navigate the Nix store and understand the underlying principles of its package management system; you will learn the Nix store’s structure, the relationship between derivations and store paths, and how symlinks and profiles work to manage packages.</p>
+
+<p>This is my first blog, so I will keep it concise to get feedback on the pacing, tone, and the content being covered. I hope it’s helpful 🙏</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p>Before I begin, a few infamous terms need to be thrown out of the way. A <em>derivation</em> is a build recipe for software. It consists of inputs and outputs. Outputs are what we will later discover to be directly connected to paths in the Nix store (store paths). Store paths are always directories, and they are one kind of object in the Nix store, or a store object. There are other store objects, and in fact derivations are a store object. Store paths are a byproduct of derivations, and they contain the programs that we use.</p>
+
+<p>Normally, for a top-to-bottom approach like this you would start with something everyone is familiar with, such as software applications. Instead, I will take the converse approach to give further motivation for the concepts in this blog.</p>
+
+<h2 id="scenario-1---finding-a-library">Scenario 1 - Finding a Library</h2>
+
+<p>For the first scenario, suppose you are a programmer and have installed a library like <code class="language-plaintext highlighter-rouge">glm</code> on your NixOS system, which is a mathematical library for C/C++. If you do not understand what that means, imagine code that exists on your system as a package that you cannot directly run. Since it is not an executable, you cannot simply cheat your way by reading a symlink in your path (though specialized environment variables exist). So unless we want to run <code class="language-plaintext highlighter-rouge">find</code> in <code class="language-plaintext highlighter-rouge">/nix/store</code> and wait until the heat death of the universe for it to finish, and then go through duplicate installations of the library to find the one we are looking for, we need to learn some Nix commands.</p>
+
+<p>First, we need to enter a Nix REPL environment to resolve the package directly. REPL stands for Read-Eval-Print Loop, which is a powerful environment for testing various Nix expressions. We can access it with the primary <code class="language-plaintext highlighter-rouge">nix</code> command.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix repl
+nix-repl&gt; pkgs <span class="o">=</span> import &lt;nixpkgs&gt; <span class="o">{}</span>
+nix-repl&gt; pkgs.glm
+«derivation /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv»
+</code></pre></div></div>
+
+<p>This article assumes a basic familiarity with the Nix language, so a crash course for it will not be interleaved. But as a side note, attributes in Nix are evaluated lazily, so we do not worry about the import taking a long time. This is due to the fact that lazy evaluation guarantees expressions are evaluated only when they are needed—not when they are defined.</p>
+
+<p>The last command yields a path because the interpreter treats it as a special kind of attribute set that was introduced as a derivation. Indeed, we can confirm that by running another command in the environment.</p>
+
+<div class="language-nix highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">nix-repl</span><span class="o">&gt;</span> <span class="nv">lib</span> <span class="o">=</span> <span class="nv">pkgs</span><span class="o">.</span><span class="nv">lib</span>
+<span class="nv">nix-repl</span><span class="o">&gt;</span> <span class="nv">lib</span><span class="o">.</span><span class="nv">attrsets</span><span class="o">.</span><span class="nv">isDerivation</span> <span class="nv">pkgs</span><span class="o">.</span><span class="nv">glm</span>
+<span class="kc">true</span>
+</code></pre></div></div>
+
+<aside class="callout callout--tip" role="note" aria-label="Tip">
+  <div class="callout__inner">
+    <div class="callout-header">
+      <span class="callout__icon" aria-hidden="true">💡</span><strong class="callout__title">Tip</strong></div>
+
+    <div class="callout__content">
+<p>Use <a href="https://noogle.dev/">noogle.dev</a> for looking through <code class="language-plaintext highlighter-rouge">lib</code> and <a href="https://mynixos.com/">mynixos.com</a> for looking through <code class="language-plaintext highlighter-rouge">pkgs</code>.</p>
+</div>
+  </div>
+</aside>
+
+<p>From the penultimate set of commands, we infer that the derivation is located at <code class="language-plaintext highlighter-rouge">/nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv</code>. (Derivations always use the <code class="language-plaintext highlighter-rouge">.drv</code> file extension.)</p>
+
+<p>Every derivation (<code class="language-plaintext highlighter-rouge">.drv</code>) has a set of outputs. When a derivation is realised (i.e. built), these become what we will find out to be <em>store paths</em>.</p>
+
+<p>The next step is finding the actual store path where the library file (<code class="language-plaintext highlighter-rouge">.a</code> or <code class="language-plaintext highlighter-rouge">.so</code>) resides in. We can use the <code class="language-plaintext highlighter-rouge">nix-store</code> command to achieve this.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--query</span> <span class="nt">--outputs</span> /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+/nix/store/gkahdgly8x8z8b6cvgab4gij0niajx7x-glm-1.0.1-doc
+/nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1
+</code></pre></div></div>
+
+<p>The latter is the one we are looking for since the former is documentation. This shows that store paths are blobs in the Nix store where different versions of the same package may exist. It is now trivial to list the <code class="language-plaintext highlighter-rouge">lib</code> directory, which reveals that the library we are searching for is there and is statically-linked.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> /nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1/lib
+libglm.a
+pkgconfig
+</code></pre></div></div>
+
+<p>For programmers, it should be completely unsurprising that it is not in some sort of path because it need not be resolved automatically. Later, we will see that this is not the case for the other type of libraries.</p>
+
+<p>It is also possible to inspect the derivation itself in a human-readable JSON form with the <code class="language-plaintext highlighter-rouge">nix</code> command, which lists the mysterious outputs that were mentioned before:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix derivation show /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+...lots of json output
+</code></pre></div></div>
+
+<p>Here is a snippet from the part of the JSON that specifically contains the outputs:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"outputs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"doc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/nix/store/gkahdgly8x8z8b6cvgab4gij0niajx7x-glm-1.0.1-doc"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"out"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>It is not hard to deduce from this that outputs have a one-to-one correspondence with store paths. So that is what they create when you realise a derivation with:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--realize</span> /nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+</code></pre></div></div>
+
+<p>Note that the <code class="language-plaintext highlighter-rouge">.drv</code> file that has produced the store path we are looking for is called the <em>deriver</em>. The inverse operation—finding a derivation from a store path—simply involves asking for the deriver.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>nix-store <span class="nt">--query</span> <span class="nt">--deriver</span> /nix/store/nlrq8s273x3kbm2w4g90pymx1ab9ww3p-glm-1.0.1/
+/nix/store/25rdysybbl5aangkgkdznc57xfihq2zk-glm-1.0.1.drv
+</code></pre></div></div>
+
+<p>Putting everything together, we can see the chain of symlinks in this concise graph:</p>
+
+<p><img alt="Derivation Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSIxMDc2cHQiIGhlaWdodD0iMzUycHQiCiB2aWV3Qm94PSIwLjAwIDAuMDAgMTA3Ni4wMCAzNTIuMDYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgo8ZyBpZD0iZ3JhcGgwIiBjbGFzcz0iZ3JhcGgiIHRyYW5zZm9ybT0ic2NhbGUoMSAxKSByb3RhdGUoMCkgdHJhbnNsYXRlKDQgMzQ4LjA2KSI+Cjx0aXRsZT5HPC90aXRsZT4KPGcgaWQ9ImNsdXN0MSIgY2xhc3M9ImNsdXN0ZXIiPgo8dGl0bGU+Y2x1c3Rlcl9kZXJpdmF0aW9uPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI4LC04IDgsLTMzNi4wNiAxMDYwLC0zMzYuMDYgMTA2MCwtOCA4LC04Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjUzNCIgeT0iLTMxOC43NiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5EZXJpdmF0aW9uIOKGkiBvdXRwdXRzIChsaWJyYXJ5IGV4YW1wbGUpPC90ZXh0Pgo8L2c+CjwhLS0gZHJ2IC0tPgo8ZyBpZD0ibm9kZTEiIGNsYXNzPSJub2RlIj4KPHRpdGxlPmRydjwvdGl0bGU+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGN4PSI1MzIiIGN5PSItMjcyLjc2IiByeD0iMzE3LjMxIiByeT0iMzAuMDUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNTMyIiB5PSItMjc2LjcxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPi9uaXgvc3RvcmUvMjVyZHlzeWJibDVhYW5na2drZHpuYzU3eGZpaHEyemsmIzQ1O2dsbSYjNDU7MS4wLjEuZHJ2PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI1MzIiIHk9Ii0yNTkuNDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KGRlcml2YXRpb24pPC90ZXh0Pgo8L2c+CjwhLS0gb3V0cHV0c19kb2MgLS0+CjxnIGlkPSJub2RlMiIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+b3V0cHV0c19kb2M8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iMjA0IiBjeT0iLTE1OS40MSIgcng9IjE4Ny45MSIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIwNCIgeT0iLTE2My4zNiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4vbml4L3N0b3JlL2drYWhkZ2x5Li4uJiM0NTtnbG0mIzQ1OzEuMC4xJiM0NTtkb2M8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjIwNCIgeT0iLTE0Ni4xMSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4ob3V0cHV0OiBkb2MpPC90ZXh0Pgo8L2c+CjwhLS0gZHJ2JiM0NTsmZ3Q7b3V0cHV0c19kb2MgLS0+CjxnIGlkPSJlZGdlMSIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+ZHJ2JiM0NTsmZ3Q7b3V0cHV0c19kb2M8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNNDQ4LjM4LC0yNDMuMzdDNDAxLC0yMjcuMjkgMzQxLjc0LC0yMDcuMTcgMjkzLjQzLC0xOTAuNzciLz4KPHBvbHlnb24gZmlsbD0iYmxhY2siIHN0cm9rZT0iYmxhY2siIHBvaW50cz0iMjk0LjcsLTE4Ny41IDI4NC4xLC0xODcuNiAyOTIuNDUsLTE5NC4xMyAyOTQuNywtMTg3LjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNDI4LjE0IiB5PSItMjExLjQxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPm91dHB1dDogZG9jPC90ZXh0Pgo8L2c+CjwhLS0gb3V0cHV0c19vdXQgLS0+CjxnIGlkPSJub2RlMyIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+b3V0cHV0c19vdXQ8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iNzMxIiBjeT0iLTE1OS40MSIgcng9IjMyMS4wMyIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjczMSIgeT0iLTE2My4zNiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4vbml4L3N0b3JlL25scnE4czI3M3gza2JtMnc0ZzkwcHlteDFhYjl3dzNwJiM0NTtnbG0mIzQ1OzEuMC4xPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI3MzEiIHk9Ii0xNDYuMTEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KG91dHB1dDogb3V0KTwvdGV4dD4KPC9nPgo8IS0tIGRydiYjNDU7Jmd0O291dHB1dHNfb3V0IC0tPgo8ZyBpZD0iZWRnZTIiIGNsYXNzPSJlZGdlIj4KPHRpdGxlPmRydiYjNDU7Jmd0O291dHB1dHNfb3V0PC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgZD0iTTU4NC4wMiwtMjQyLjY1QzYxMC4wOCwtMjI4LjA3IDY0MS44LC0yMTAuMzIgNjY5LjEsLTE5NS4wNSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI2NzAuNiwtMTk4LjIyIDY3Ny42MSwtMTkwLjI4IDY2Ny4xOCwtMTkyLjExIDY3MC42LC0xOTguMjIiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNjgzLjE2IiB5PSItMjExLjQxIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPm91dHB1dDogb3V0PC90ZXh0Pgo8L2c+CjwhLS0gbGliX2ZpbGUgLS0+CjxnIGlkPSJub2RlNCIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+bGliX2ZpbGU8L3RpdGxlPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBjeD0iNzMxIiBjeT0iLTQ2LjA1IiByeD0iMjM5Ljg5IiByeT0iMzAuMDUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzMxIiB5PSItNTAiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9ubHJxOHMyNzN4Li4uJiM0NTtnbG0mIzQ1OzEuMC4xL2xpYi9saWJnbG0uYTwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzMxIiB5PSItMzIuNzUiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KGFjdHVhbCBmaWxlKTwvdGV4dD4KPC9nPgo8IS0tIG91dHB1dHNfb3V0JiM0NTsmZ3Q7bGliX2ZpbGUgLS0+CjxnIGlkPSJlZGdlMyIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+b3V0cHV0c19vdXQmIzQ1OyZndDtsaWJfZmlsZTwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik03MzEsLTEyOC44NkM3MzEsLTExNi4xNyA3MzEsLTEwMS4xNSA3MzEsLTg3LjQ2Ii8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjczNC41LC04Ny44NyA3MzEsLTc3Ljg3IDcyNy41LC04Ny44NyA3MzQuNSwtODcuODciLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNzYxIiB5PSItOTguMDUiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+Y29udGFpbnM8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K" /></p>
+
+<p>But why is it stored this way? We have the initial motivation for researching it, so all that remains is reverse engineering the design choice.</p>
+
+<h2 id="scenario-2---understanding-benefits-with-an-example">Scenario 2 - Understanding Benefits with an Example</h2>
+
+<p>Now suppose you had a store path with an executable, say <code class="language-plaintext highlighter-rouge">git</code>. We can leverage the fact that it is in the path to track it down more easily and figure out more stuff about our system. First, we find where its reference is in the path.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>which git
+/home/user/.nix-profile/bin/git
+</code></pre></div></div>
+
+<p>This is part of the running user profile. By definition, profiles in NixOS are symlinks to specific generations. More precisely, there is one profile in every system, but there can be more than one generation. Generations are simply snapshots of profiles, which are pointers for a set of installed packages or system configuration.</p>
+
+<p><img alt="Derivation Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSIzNDlwdCIgaGVpZ2h0PSIxNThwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCAzNDkuMDAgMTU4LjI1IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMCIgY2xhc3M9ImdyYXBoIiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDE1NC4yNSkiPgo8dGl0bGU+RzwvdGl0bGU+CjwhLS0gUHJvZmlsZSAtLT4KPGcgaWQ9Im5vZGUxIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5Qcm9maWxlPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIxMzMsLTk2LjI1IDAsLTk2LjI1IDAsLTYwLjI1IDEzMywtNjAuMjUgMTMzLC05Ni4yNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI2Ni41IiB5PSItNzMuNTgiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+UHJvZmlsZSAoc3ltbGluayk8L3RleHQ+CjwvZz4KPCEtLSBHZW4xIC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNzPSJub2RlIj4KPHRpdGxlPkdlbjE8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0MSwtMTUwLjI1IDIzMiwtMTUwLjI1IDIzMiwtMTE0LjI1IDM0MSwtMTE0LjI1IDM0MSwtMTUwLjI1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItMTI3LjU4IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPkdlbmVyYXRpb24gMTwvdGV4dD4KPC9nPgo8IS0tIFByb2ZpbGUmIzQ1OyZndDtHZW4xIC0tPgo8ZyBpZD0iZWRnZTIiIGNsYXNzPSJlZGdlIj4KPHRpdGxlPlByb2ZpbGUmIzQ1OyZndDtHZW4xPC90aXRsZT4KPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLWRhc2hhcnJheT0iNSwyIiBkPSJNMTMzLjUsLTk0LjZDMTY0Ljk1LC0xMDIuMzkgMjAyLjEsLTExMS41OSAyMzEuNzksLTExOC45NSIvPgo8L2c+CjwhLS0gR2VuMiAtLT4KPGcgaWQ9Im5vZGUzIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5HZW4yPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzNDEsLTk2LjI1IDIzMiwtOTYuMjUgMjMyLC02MC4yNSAzNDEsLTYwLjI1IDM0MSwtOTYuMjUiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMjg2LjUiIHk9Ii03My41OCIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5HZW5lcmF0aW9uIDI8L3RleHQ+CjwvZz4KPCEtLSBQcm9maWxlJiM0NTsmZ3Q7R2VuMiAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5Qcm9maWxlJiM0NTsmZ3Q7R2VuMjwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS1kYXNoYXJyYXk9IjUsMiIgZD0iTTEzMy41LC03OC4yNUMxNjQuOTUsLTc4LjI1IDIwMi4xLC03OC4yNSAyMzEuNzksLTc4LjI1Ii8+CjwvZz4KPCEtLSBHZW4zIC0tPgo8ZyBpZD0ibm9kZTQiIGNsYXNzPSJub2RlIj4KPHRpdGxlPkdlbjM8L3RpdGxlPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM0MSwtNDIuNSAyMzIsLTQyLjUgMjMyLDAgMzQxLDAgMzQxLC00Mi41Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItMjUuMiIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5HZW5lcmF0aW9uIDM8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjI4Ni41IiB5PSItNy45NSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4oY3VycmVudCk8L3RleHQ+CjwvZz4KPCEtLSBQcm9maWxlJiM0NTsmZ3Q7R2VuMyAtLT4KPGcgaWQ9ImVkZ2UxIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5Qcm9maWxlJiM0NTsmZ3Q7R2VuMzwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0xMzMuNSwtNjAuOTlDMTYxLjE0LC01My43NiAxOTMuMTksLTQ1LjM5IDIyMC43LC0zOC4xOSIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIyMjEuNTQsLTQxLjU5IDIzMC4zMywtMzUuNjggMjE5Ljc3LC0zNC44MiAyMjEuNTQsLTQxLjU5Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjE4Mi41IiB5PSItNTguODEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+cG9pbnRzIHRvPC90ZXh0Pgo8L2c+CjwvZz4KPC9zdmc+Cg==" /></p>
+
+<p>In our case, you can see the symlink here:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /home/user/.nix-profile
+lrwxrwxrwx 1 user <span class="nb">users </span>44 Apr  5  2025 .nix-profile -&gt; /home/user/.local/state/nix/profiles/profile
+</code></pre></div></div>
+
+<p>Programs in the bin directory of profiles are also symlinks, so using <code class="language-plaintext highlighter-rouge">ls</code> we can find its store path:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /home/user/.nix-profile/bin/git
+lrwxrwxrwx 20 root root 62 Jan  1  1970 /home/user/.nix-profile/bin/git -&gt; /nix/store/v2rxk9xkcxsas64wl7ds31al15cm2wqd-git-2.50.1/bin/git
+</code></pre></div></div>
+
+<p>(The command <code class="language-plaintext highlighter-rouge">readlink -f &lt;symlink&gt;</code> is generally better for fetching the real file of a symlink, but <code class="language-plaintext highlighter-rouge">ls -l</code> will be used for demonstrative purposes.)</p>
+
+<p>Equivalently, NixOS has a system profile, which resides in <code class="language-plaintext highlighter-rouge">/run/current-system</code>; it is the same as <code class="language-plaintext highlighter-rouge">/nix/var/nix/profiles/system</code>, whose content follows this structure:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> /run/current-system
+activate
+bin
+dry-activate
+extra-dependencies
+init
+initrd
+kernel-modules
+nixos-version
+sw
+systemd
+append-initrd-secrets
+boot.json
+etc
+firmware
+init-interface-version
+kernel
+kernel-params
+specialisation
+system
+</code></pre></div></div>
+
+<p>The only difference one needs to understand at this stage of learning is that the packages you install with Home Manager will be in the user profile, and the ones you do not are in the system profile.</p>
+
+<p>Furthermore, <code class="language-plaintext highlighter-rouge">/run/current-system/sw</code> (where <code class="language-plaintext highlighter-rouge">sw</code> is a shorthand for “software”) is where all of our executables are symlinked to. And unsurprisingly, these symlinks point to the store paths we discussed!</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-l</span> /run/current-system/sw
+lrwxrwxrwx 11 root root 55 Jan  1  1970 /run/current-system/sw -&gt; /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path
+<span class="nv">$ </span><span class="nb">ls</span> /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path
+bin
+etc
+lib
+sbin
+share
+</code></pre></div></div>
+
+<p>An important interjection here is that, since <code class="language-plaintext highlighter-rouge">glm</code> is a static library, it is not located in the <code class="language-plaintext highlighter-rouge">lib</code> subdirectory; only shared library files (<code class="language-plaintext highlighter-rouge">.so</code>) are in it. Just like a path needs to exist for regular programs, it suffices to view this as an equivalent path existing exclusively for shared libraries, which are used by other programs.</p>
+
+<p>Since Git is installed system-wide, you can probably guess that it is in the <code class="language-plaintext highlighter-rouge">bin</code> (binary) directory, which in turn is symlinked to the abovementioned store path.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&gt; ls -l /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path/bin/git
+lrwxrwxrwx 62 root root 65 Jan  1  1970 /nix/store/fbdm2v6r78w3n0a7f78pbnjdwpdwi12x-system-path/bin/git -&gt; /nix/store/gz9a9vvx15cwznzw2h1gr4k7778bbgqk-firejail-wrap/bin/git
+</code></pre></div></div>
+
+<p>Wrapping this section up, you can see everything we have discovered from the system profile in this graph:</p>
+
+<p><img alt="System Profile Symlinks" class="graphviz" loading="lazy" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPgo8IS0tIEdlbmVyYXRlZCBieSBncmFwaHZpeiB2ZXJzaW9uIDEyLjIuMSAoMCkKIC0tPgo8IS0tIFRpdGxlOiBHIFBhZ2VzOiAxIC0tPgo8c3ZnIHdpZHRoPSI3NjJwdCIgaGVpZ2h0PSI0NjVwdCIKIHZpZXdCb3g9IjAuMDAgMC4wMCA3NjIuMDAgNDY1LjQyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4KPGcgaWQ9ImdyYXBoMCIgY2xhc3M9ImdyYXBoIiB0cmFuc2Zvcm09InNjYWxlKDEgMSkgcm90YXRlKDApIHRyYW5zbGF0ZSg0IDQ2MS40MikiPgo8dGl0bGU+RzwvdGl0bGU+CjxnIGlkPSJjbHVzdDEiIGNsYXNzPSJjbHVzdGVyIj4KPHRpdGxlPmNsdXN0ZXJfc3lzdGVtPC90aXRsZT4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSI4LC04IDgsLTQ0OS40MiA3NDYsLTQ0OS40MiA3NDYsLTggOCwtOCIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii00MzIuMTIiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+U3lzdGVtIHByb2ZpbGUgY2hhaW48L3RleHQ+CjwvZz4KPCEtLSBydW5fY3VycmVudF9zeXN0ZW0gLS0+CjxnIGlkPSJub2RlMSIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+cnVuX2N1cnJlbnRfc3lzdGVtPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0zODYuMTEiIHJ4PSIxMjkuMDUiIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0zOTAuMDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L3J1bi9jdXJyZW50JiM0NTtzeXN0ZW0vc3c8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTM3Mi44MSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj4oc3lzdGVtIHN3KTwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9wYXRoIC0tPgo8ZyBpZD0ibm9kZTIiIGNsYXNzPSJub2RlIj4KPHRpdGxlPnN5c3RlbV9wYXRoPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0yNzIuNzYiIHJ4PSIzMjUuMjciIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0yNzYuNzEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9mYmRtMnY2cjc4dzNuMGE3Zjc4cGJuamR3cGR3aTEyeCYjNDU7c3lzdGVtJiM0NTtwYXRoPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0yNTkuNDYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+KHN5c3RlbSYjNDU7cGF0aCk8L3RleHQ+CjwvZz4KPCEtLSBydW5fY3VycmVudF9zeXN0ZW0mIzQ1OyZndDtzeXN0ZW1fcGF0aCAtLT4KPGcgaWQ9ImVkZ2UxIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5ydW5fY3VycmVudF9zeXN0ZW0mIzQ1OyZndDtzeXN0ZW1fcGF0aDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0zNzcsLTM1NS41N0MzNzcsLTM0Mi44OCAzNzcsLTMyNy44NiAzNzcsLTMxNC4xNyIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODAuNSwtMzE0LjU3IDM3NywtMzA0LjU3IDM3My41LC0zMTQuNTcgMzgwLjUsLTMxNC41NyIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSI0MDQuNzUiIHk9Ii0zMjQuNzYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+c3ltbGluazwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9iaW5fZ2l0IC0tPgo8ZyBpZD0ibm9kZTMiIGNsYXNzPSJub2RlIj4KPHRpdGxlPnN5c3RlbV9iaW5fZ2l0PC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii0xNTkuNDEiIHJ4PSIxNzAuOTQiIHJ5PSIzMC4wNSIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0xNjMuMzYiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+L25peC9zdG9yZS9mYmRtMi4uLi9iaW4vZ2l0PC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ibWlkZGxlIiB4PSIzNzciIHk9Ii0xNDYuMTEiIGZvbnQtZmFtaWx5PSJUaW1lcyxzZXJpZiIgZm9udC1zaXplPSIxNC4wMCI+4oaSIC9uaXgvc3RvcmUvZ3o5YTl2Li4uJiM0NTtnaXQvYmluL2dpdDwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9wYXRoJiM0NTsmZ3Q7c3lzdGVtX2Jpbl9naXQgLS0+CjxnIGlkPSJlZGdlMiIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+c3lzdGVtX3BhdGgmIzQ1OyZndDtzeXN0ZW1fYmluX2dpdDwvdGl0bGU+CjxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIGQ9Ik0zNzcsLTI0Mi4yMUMzNzcsLTIyOS41MyAzNzcsLTIxNC41IDM3NywtMjAwLjgxIi8+Cjxwb2x5Z29uIGZpbGw9ImJsYWNrIiBzdHJva2U9ImJsYWNrIiBwb2ludHM9IjM4MC41LC0yMDEuMjIgMzc3LC0xOTEuMjIgMzczLjUsLTIwMS4yMiAzODAuNSwtMjAxLjIyIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQzNyIgeT0iLTIxMS40MSIgZm9udC1mYW1pbHk9IlRpbWVzLHNlcmlmIiBmb250LXNpemU9IjE0LjAwIj5jb250YWlucyBzeW1saW5rPC90ZXh0Pgo8L2c+CjwhLS0gc3RvcmVfZ2l0MiAtLT4KPGcgaWQ9Im5vZGU0IiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5zdG9yZV9naXQyPC90aXRsZT4KPGVsbGlwc2UgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgY3g9IjM3NyIgY3k9Ii00Ni4wNSIgcng9IjM2MS4zMyIgcnk9IjMwLjA1Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTUwIiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPi9uaXgvc3RvcmUvZ3o5YTl2dngxNWN3em56dzJoMWdyNGs3Nzc4YmJncWsmIzQ1O2ZpcmVqYWlsJiM0NTt3cmFwL2Jpbi9naXQ8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjM3NyIgeT0iLTMyLjc1IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPihzdG9yZSBwYXRoKTwvdGV4dD4KPC9nPgo8IS0tIHN5c3RlbV9iaW5fZ2l0JiM0NTsmZ3Q7c3RvcmVfZ2l0MiAtLT4KPGcgaWQ9ImVkZ2UzIiBjbGFzcz0iZWRnZSI+Cjx0aXRsZT5zeXN0ZW1fYmluX2dpdCYjNDU7Jmd0O3N0b3JlX2dpdDI8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBkPSJNMzc3LC0xMjguODZDMzc3LC0xMTYuMTcgMzc3LC0xMDEuMTUgMzc3LC04Ny40NiIvPgo8cG9seWdvbiBmaWxsPSJibGFjayIgc3Ryb2tlPSJibGFjayIgcG9pbnRzPSIzODAuNSwtODcuODcgMzc3LC03Ny44NyAzNzMuNSwtODcuODcgMzgwLjUsLTg3Ljg3Ii8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQwNC43NSIgeT0iLTk4LjA1IiBmb250LWZhbWlseT0iVGltZXMsc2VyaWYiIGZvbnQtc2l6ZT0iMTQuMDAiPnN5bWxpbms8L3RleHQ+CjwvZz4KPC9nPgo8L3N2Zz4K" /></p>
+
+<h2 id="the-why--conclusion">The Why &amp; Conclusion</h2>
+
+<p>As we observed in the previous example, the profile is a chain of symlinks whose destinations are store paths in the Nix store. The fact that we can simply switch applications by modifying the symlinks means that, if we later want to revert to an older version of an arbitrary package, say because it broke, all we have to do is make the symlinks point to the old store paths! And that’s precisely what your NixOS system does—automatically manages profiles and the Nix “generations” that you see upon system initialization.</p>
+
+<p>The store path has the version of the package to help distinguish between new and old versions, and the random letters that you see in front of its name (in this case, <code class="language-plaintext highlighter-rouge">fbdm2v6r78w3n0a7f78pbnjdwpdwi12x</code>) is called the <em>store path hash</em>. If two store paths in the Nix store were to have the same name and version, then this random string of letters that gets generated through a mathematical process ensures that they do not conflict. The combination of these three attributes makes up the store path, and this is why the Nix store is called <em>content-addressed</em>.</p>
+
+<p>Obviously, if we modify an existing store path, that could break the link between the derivation, but also make future reverts unreliable. This is why you are not allowed to edit it. The property is called <em>immutability</em>.</p>
+
+<p>Lastly, the reason derivations are the way they are is they orchestrate all of the store paths and provide them all the necessary dependencies. We saw the inner details of how they achieve this in the first example.</p>
+
+<p>And this concludes our witchhunt! We have seen how all of these little things are interconnected in the ecosystem, and you have learned the fundamentals of this complex monolith called the Nix store. I leave the traversal of the user profile located in <code class="language-plaintext highlighter-rouge">~/.nix-profile</code> as an exercise to the reader.</p>
+
+<p>To summarize everything that I demonstrated, below is a cheatsheet of the commands and material introduced above.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --outputs &lt;derivation&gt;</code>: fetch the store paths associated with a derivation</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --deriver &lt;store-path&gt;</code>: fetch the derivation that a store path originates from</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --realize &lt;derivation&gt;</code>: build (realise) a derivation; create store paths from outputs</li>
+  <li><code class="language-plaintext highlighter-rouge">nix derivation show &lt;derivation&gt;</code>: inspect a derivation in human-readable JSON form</li>
+  <li><code class="language-plaintext highlighter-rouge">/run/current-system</code>: the NixOS system profile; same as <code class="language-plaintext highlighter-rouge">/nix/var/nix/profiles/system</code></li>
+  <li><code class="language-plaintext highlighter-rouge">~/.nix-profile</code>: the NixOS user profile</li>
+</ul>
+
+<p>Here are some bonus commands that were not needed but very useful in day-to-day store operation:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --referrers &lt;store-path&gt;</code>: see what references a store path</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --roots</code>: roots of a store path</li>
+  <li><code class="language-plaintext highlighter-rouge">nix-store --query --graph</code>: produce a neat Graphviz DOT representation of a dependency graph for a package</li>
+</ul>
+
+<p>For further reading, I suggest looking into the official NixOS documentation.</p>
+
+<h2 id="bonus-garbage-collection">Bonus: Garbage Collection</h2>
+
+<p>Ever wondered how the Nix store is able to know which store paths need to be deleted? In case you weren’t aware, garbage collection allows us to delete old store paths by running <code class="language-plaintext highlighter-rouge">nix-collect-garbage -d</code>.</p>
+
+<p>So far, we know that the relation is essentially profile ↔ store ↔ deriver. As it was explained before, store paths are immutable by design. Garbage collection simply identifies every store path that is not reachable from a set of GC roots, and deletes them.</p>
+
+<p>Since every profile generation in <code class="language-plaintext highlighter-rouge">~/.nix-profile</code> is considered a root in and of itself, as long as it exists, these store paths that we saw are considered new. If you build a new generation, the old generations still exist until you delete them or they get automatically deleted, so their store paths are still referenced. In other words, if you want old packages actually removed, you must remove or prune those old generations and then run the garbage collector.</p>]]></content><author><name>Quarterstar</name></author><category term="nix" /><category term="programming" /><summary type="html"><![CDATA[Learn how to operate on the Nix Store commands like a professional user. See how the commands relate to its functionality.]]></summary></entry></feed>

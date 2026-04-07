@@ -1,0 +1,1401 @@
+
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+
+    <link rel="preload" href="/assets/fonts/DejaVuSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ArchivoBlack-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/NotoSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<link rel="preconnect" href="https://groot.mailerlite.com" crossorigin>
+<link rel="preconnect" href="https://utteranc.es" crossorigin>
+
+    <link 
+  rel="preload" 
+  as="image" 
+  href="/assets/images/backgrounds/surveillance-01.webp" 
+  fetchpriority="high"
+>
+
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="description" content="Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.">
+
+
+    <link rel="canonical" href="https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/" />
+    <meta property="og:title" content="">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="">
+
+    <title>The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond</title>
+
+    <!-- Monkey patch -->
+<!-- <script type="text/javascript"> -->
+<!-- (() => { -->
+<!--     // 1. Function to apply attributes to the script element -->
+<!--     const patchScript = (el) => { -->
+<!--         if (el && el.tagName === 'SCRIPT' && el.src && el.src.includes('mlcdn.com')) { -->
+<!--             el.setAttribute('defer', ''); -->
+<!--             el.defer = true; -->
+<!--             // dynamic scripts are async by default; setting to false forces 'defer' behavior -->
+<!--             el.async = false; --> 
+<!--         } -->
+<!--     }; -->
+
+<!--     // Intercept setAttribute -->
+<!--     const originalSetAttribute = Element.prototype.setAttribute; -->
+<!--     Element.prototype.setAttribute = function(name, value) { -->
+<!--         originalSetAttribute.apply(this, arguments); -->
+<!--         if (name === 'src') patchScript(this); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (appendChild) -->
+<!--     const originalAppendChild = Node.prototype.appendChild; -->
+<!--     Node.prototype.appendChild = function(newNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalAppendChild.apply(this, arguments); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (insertBefore) -->
+<!--     const originalInsertBefore = Node.prototype.insertBefore; -->
+<!--     Node.prototype.insertBefore = function(newNode, referenceNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalInsertBefore.apply(this, arguments); -->
+<!--     }; -->
+<!-- })(); -->
+<!-- </script> -->
+
+<!-- <!-1- Critical CSS: Essential for initial layout and basic content visibility -1-> -->
+<!-- NOTE: This file should be kept minimal and most code that needs to be loaded sequentially should be async instead. -->
+
+<!-- Article -->
+<!-- Prevent the mobile navbar from appearing for a split second when loading the page (even on PCs) -->
+
+<style>
+  .nav-drawer {
+    transform: translateX(100%);
+  }
+</style>
+
+
+<!-- <!-1- Async CSS: High priority UI components and global utilities -1-> -->
+
+
+<link rel="preload" href="/assets/styles/async-bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/styles/async-bundle.css"></noscript>
+
+
+<!-- Defer CSS: Non-critical, interactive, or below-the-fold styles -->
+
+
+<link
+  rel="stylesheet"
+  href="/assets/styles/deferred-bundle.css"
+  
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href="/assets/styles/deferred-bundle.css"
+    >
+</noscript>
+
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/">
+<meta property="og:title" content="The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond">
+<meta property="og:description" content="Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.">
+<meta property="og:image" content="https://www.quarterstar.tech">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:title" content="The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond">
+
+
+
+
+<link
+  rel="stylesheet"
+  href=""
+  id="hljs-theme"
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href=""
+    id="hljs-theme-fallback">
+</noscript>
+
+
+<script>
+  (function() {
+    try {
+      const darkClass = 'dark-mode';
+      const stored = localStorage.getItem('site-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if(stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add(darkClass);
+      }
+    } catch(e) {}
+  })();
+</script>
+
+
+<!-- TODO (MOVE) -->
+<script>
+  function ml_webform_success_32409238() {
+    var $ = ml_jQuery || jQuery;
+    $('.ml-subscribe-form-32409238 .row-success').show();
+    $('.ml-subscribe-form-32409238 .row-form').hide();
+  }
+</script>
+<!-- <script src="https://groot.mailerlite.com/js/w/webforms.min.js?v176e10baa5e7ed80d35ae235be3d5024" type="text/javascript" defer></script> -->
+<script src="/assets/external-scripts/mailerlite-webform.js" type="text/javascript" defer></script>
+
+
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond",
+  "datePublished": "2025-12-22T00:00:00+01:00",
+  "author": [{
+      "@type": "Person",
+      "name": "Quarterstar",
+      "url": "https://github.com/quarterstar"
+    }]
+}
+</script>
+
+  </head>
+  <body data-barba="wrapper">
+    <header class="header">
+  <nav id="desktop-nav" class="desktop-nav">
+    <div class="brand-btns">
+      <div id="brand">
+        <a href="https://github.com/quarterstar" class="logo" aria-label="Visit my GitHub profile">
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quarterstar Logo Animation</title>
+  <style>
+    #quarterstar {
+      width: 256px;
+      height: 256px;
+      border-radius: 10px;
+    }
+
+    #q-rotations > * {
+      transition: opacity 200ms linear;
+    }
+    #q-rotations .hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <svg id="quarterstar" viewBox="0 0 256 256" width="256px" height="256px" xmlns="http://www.w3.org/2000/svg">
+    <style>
+      #q-rotations > * {
+        transition: opacity 200ms linear;
+      }
+
+      #orig-q, #q-rotations text {
+        /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;*/
+        font-family: "Noto Sans Regular";
+      }
+
+      #q-rotations .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #q-rotations text {
+        font-family: "Noto Sans Regular";
+      }
+    </style>
+
+    <g id="layer1">
+      <circle style="fill:#515151;stroke-width:5.06729;fill-opacity:1" cx="128" cy="128" r="128" />
+      
+      <!-- Rotated Q copies -->
+      <g id="q-rotations">
+        <text transform="rotate(-15 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+        <text transform="rotate(-30 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-45 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-60 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-75 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-90 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-105 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-120 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-135 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-150 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-165 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-180 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2;">Q</text>
+        <text transform="rotate(-195 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-210 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-225 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-240 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-255 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-270 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-285 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-300 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-315 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-330 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-345 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+      </g>
+
+      <!-- Original top Q (fully visible) -->
+      <text id="orig-q" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:1;">Q</text>
+    </g>
+
+    <g id="center-asterisk-group" transform="translate(128 128)">
+  <text id="center-asterisk"
+        x="0" y="0"
+        text-anchor="middle"
+        dominant-baseline="central"
+        style="font-size:28px;fill:#ffffff;pointer-events:none;">
+    *
+  </text>
+</g>
+  </svg>
+</body>
+</html>
+
+        </a>
+        <div id="brand-info">
+          <p class="brand-name">Q*</p>
+          <p class="brand-desc">Defending offensively.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pc-buttons">
+      <button id="theme-toggle-pc"
+        role="switch"
+        aria-label="Toggle dark mode"
+        aria-checked="false"
+        title="Toggle dark mode">
+  <span class="track" aria-hidden="true">
+    <span class="knob" aria-hidden="true"></span>
+  </span>
+
+  <!-- visual text (kept simple and flex-based) -->
+  <span class="labels" aria-hidden="true">
+    <span class="label label-off">Off</span>
+    <span class="label label-on">On</span>
+  </span>
+</button>
+
+      <ul class="nav-links">
+        <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+      </ul>
+    </div>
+    <div class="mobile-buttons">
+      <button id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6.5c0-.83.67-1.5 1.5-1.5h3c.83 0 1.5.67 1.5 1.5v.8H9v-.8z"
+          fill="var(--toggle-lamp-base)"/>
+    <circle class="bulb" cx="12" cy="11" r="3" fill="var(--toggle-lamp-bulb)"/>
+    <rect x="11" y="14" width="2" height="3" fill="var(--toggle-lamp-base)"/>
+    <rect x="8" y="18" width="8" height="1.2" rx="0.6" fill="var(--toggle-lamp-base)"/>
+  </svg>
+</button>
+
+      <button class="menu-btn" id="menuBtn" aria-controls="navDrawer" aria-expanded="false" aria-label="Open navigation">
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="overlay" id="overlay" tabindex="-1" aria-hidden="true"></div>
+
+<nav id="navDrawer" class="nav-drawer" aria-hidden="true" inert>
+  <!-- <button class="drawer-close" id="drawerClose" aria-label="Close navigation">✕</button> -->
+  <button class="drawer-close" id="drawerClose" aria-label="Close navigation">
+    <span aria-hidden="true">✕</span>
+  </button>
+  <h2 style="margin:6px 0 18px;">Menu</h2>
+  <ul>
+    <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+  </ul>
+</nav>
+
+    
+    <div id="canvas-holder" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 99;"></div>
+
+    <div id="main-content" data-barba="container" data-barba-namespace="article">
+      <div class="reading-progress" aria-hidden="false">
+  <div id="reading-progress-bar"
+       class="reading-progress__bar"
+       role="progressbar"
+       aria-valuemin="0"
+       aria-valuemax="100"
+       aria-valuenow="0"
+       aria-label="Reading progress">
+  </div>
+</div>
+
+
+
+      <template id="sidebar-left-template">
+        <aside id="sidebar-left">
+        </aside>
+      </template>
+      <div id="sidebar-left-container"></div>
+
+      <main>
+        <div class="article-header">
+          <h1 class="article-title">The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond</h1>
+          <span class="post-date">December 22, 2025</span>
+          <br>
+          <span>Written by Quarterstar</span>
+          <br>
+          
+
+60 minutes to read
+
+
+          <br>
+
+          <p id="tip-of-day" class="tip-of-day">Loading tip...</p>
+        </div>
+
+        
+
+
+
+        
+        
+
+        <article id="reveal-content">
+          <h2 id="introduction">Introduction</h2>
+
+<p>This article takes a tour from the very beginning of mathematics to advanced topis with the focus being developing intuition. It’s aimed for students who do not fully understand how mathematics was discovered and the intuition behind it—this is why there is verbose wording in a lot of places.</p>
+
+<p>Initially, I wanted to split the content of this article to several ones, but I realized that the topics are so interconnected that it would be of disservice to my readers to organize it that way.</p>
+
+<p>The way I like to teach things, like you will see in this article, is with a concept called <a href="https://en.wikipedia.org/wiki/Just-in-time_learning">Just in Time Learning</a>. It was coined from programming and it means to learn things when their use comes up in an application. For example, the use of division for ratios is demonstrated right before trigonometric functions are introduced. This method, from my experience, helps recall the details that are important for active learning.</p>
+
+<p>For the people already familiar with the basics, the bread and butter of the article is the section on complex numbers and the fourier transform itself. However, in that case, I hope you enjoy reading this article more as a historic overview of mathematics itself.</p>
+
+<h2 id="numbers-numbers-and-more-numbers">Numbers, Numbers, and More Numbers</h2>
+
+<p>What is a number? Maybe 2, 4, $3^2$, even $2.5$; or if you are really fancy, maybe even negative numbers. If you are a mathematician, you might think of it as an abstract element of a structure that satisfies certain rules. No matter your viewpoint, the fact remains: the need for numbers arises from real world use cases.</p>
+
+<p>At the start of mathematics, we didn’t have negative numbers. All we had was natural numbers ($1, 2, \ldots$) that were used to count the number of apples or bananas we trade. As time passed, however, we realized that we can make useful statements if we had an indeterminate amount of them, say $x$ apples and $y$ bananas; that way, you can say that you need, for example, $x + y = 15$ of any fruit in total—it does not matter which specific combination, just that you satisfy the thing that would be later known as the equation. These equations have existed since ancient times—civilizations the likes of Babylonians, to be exact.</p>
+
+<h2 id="metaphilosophical-interjection">Metaphilosophical Interjection</h2>
+
+<p>Mathematics is really just a reflection of our perception of our world. Before continuing, you should realize that mathematics are not truly objective, in the sense that the rules we have defined or absolute, but rather rules that fit our perception of reality. In that sense, mathematics can be viewed as nothing more than a game whose rules we have all decided to follow. It isn’t any more objective than a game like monopoly. The base rules in math that we follow are called <em>axioms</em>. These axioms could in fact be anything, like our rules of counting. The “objective” part of mathematics is the results that we derive if we follow these axioms. Our logic is fallible, and often times the course of history has led to them being changed to better fit our empirical model.</p>
+
+<p>During school, you are usually taught these axioms before the motivation that fueled their initial formulation, which is precisely why you may feel confused or “forced” to do things in a particular way. The point of this article is to take the converse direction and give you that motivation.</p>
+
+<p>Now, imagine you a visually impaired person is in front of you. The assumption is that the person has never been able to in their life—as in, equivalent to being born with no eyes. Can you find a way to describe to that person who has never seen, what “seeing” looks like? Can you describe to a person born with no ears what sound is like? Most likely, you cannot find an accurate description, and if you can, it is not going to understood by such a hypothetical person.</p>
+
+<p>In a similar manner, there could be senses that humans do not know exist out there that, if we had access to, would modify our axioms significantly, and maybe even solve some of our biggest theories, like consciousness. The key takeaway from this is that mathematics is really not modeling our reality, but our cognitive perception of it.</p>
+
+<h2 id="equations">Equations</h2>
+
+<p>Now, lets return to equations. For the equation $x + y = 15$, one reasonable solution is 10 apples ($x$) and 5 bananas ($y$). Clearly 10 + 5 = 15, and claiming otherwise would lead to ambiguities and contradictions like 1 = 2. But lets say that for your exchange, you don’t have 5 bananas but you have 20 apples. It seems reasonable to give those 20 apples instead since 20 - 5 = 15. Wait, what did we just use? Subtraction? Oh yeah, that seems useful for anything related to a deficit. So we need some number to add to 20 so that it equals 15. Since we have subtraction, what if we just wrapped the operation and the number into one, like -5, and then <em>add</em> that to 20? In such case, we have 20 + (-5) = 15, and our trader is confused but satisfied nevertheless.</p>
+
+<p>And so negative numbers were invented as solutions to those equations, which later on became more useful for things like displaying the remaining debt from student loans in your bank account. Since subtracting moves a number back in the number line, it makes sense to extend the positive number line by adding negative numbers in the reverse direction.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_2_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<h3 id="neat-detail-about-equations--notations">Neat Detail about Equations &amp; Notations</h3>
+
+<p>Mathematical notation took long to be “standardized,” and it still isn’t to a large degree. Equations were no exception to this. Before the notation for them was created, when you needed to express something like $x + y = 5$, people would literally write “a quantity x and a quantity y is equal to 5.” Really makes you think how, as more and more ideas are piled up to make new concepts in mathematics, compact notation is our one and only salvation.</p>
+
+<h2 id="arithmetic-operations">Arithmetic Operations</h2>
+
+<p>As time passed, mathematics became more and more intricate. We saw that we needed to add many numbers together a constant number of times, so we invented multiplication to save us from the hustle. Division was invented with a similar argument which you should try to recall yourself.</p>
+
+<p>The subtraction that we intuitively understand is really just defined as</p>
+
+<p>\[
+a - b = a + (-b)
+\]</p>
+
+<h2 id="functions">Functions</h2>
+
+<p>Apples are cool. Numbers too, I guess. What else can numbers do?</p>
+
+<p>Well, suppose that the trader from the previous chapter received your apples and bananas and wants to cut the apples into slices—4—to make his very own apple slice collection. (Clearly, the number of slices can be 1, 2, 3, and 4.)</p>
+
+<p>Our goal is to make some sort of black box machine that takes our apples and spits out sliced apples. The quantity we care about in this case is the number of them that it produces. It will need to calculate the slices for each apple individually and then add them up. But how will the machine know when to create 1, 2, 3, or 4 slices, for each specific output?</p>
+
+<p>We have not yet specified on what grounds it will pick one of those 4 values. For now, lets assume that it always picks 4 slices for each apple. If he received 5 apples from you, based on your intuitive understanding, this is an exact case for the use of multiplication. So we have $4 \times 5 = 20$ slices in total.</p>
+
+<p>How could we represent the fact that resultant equation Y = 4X in a way that denotes that this specific equation is for this purpose? Mathematicians invented special notation for it called <em>functions</em>. We have a set of inputs—our apples—and a set of outputs—our slices. The function essentially maps each input to an output, as seen below.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_6_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>In mathematics, the way we denote a function for our case is the following:</p>
+
+<p>\[
+\operatorname{slices}(x) = 4x.
+\]</p>
+
+<p>The “slices” part is simply the name of the function and does not make it changes its behavior. You can let $y = \operatorname{slices}(x)$, which is clearly the same as the $Y = 4X$ we had before, but now with a distinctive name.</p>
+
+<p>Does the mapping of one input (in a function) have to be unique? In other words, does it make sense for this machine to be able to give two distinct outputs for a single input, depending on how it feels, if its behavior is constant like at the moment? Well, no, you usually expect a machine to give you a precise result from a particular input. In computing, we call this quality determinism. For instance, the implications of such a scenario would be that if we passed 0 apples, we wouldn’t be able to make the definitive claim that it must produce 0 slices. And in general, defining the behavior of the machine as such would have far too many problems.</p>
+
+<p>Well, you could argue that you want it to have this quality if you need it to generate a random number of slices, but we can do that in the inner machine’s computations for the outputs instead. Indeed, however, we will use a form of randomness to determine the number of slices for this example. But hold up, what even is random? We know random as an event that we cannot predict. But similarly to our former metaphilosophical interjection, one needs to realize that randomness is just a very convenient abstraction for statistically predicting systems we do not fully understand.</p>
+
+<p>In fact, the way one might generate a random number is to find a generally unpredictable source of output and somehow use it to transform our output to be within a certain bound, which in our case is 1 to 4. Such an action is called <em>normalization</em>, and we will see it in action:</p>
+
+<p>Every randomness needs a source. For this example, if our machine somehow (we don’t care in what way) calculated the number of stars that are currently glowing in some galaxy that has only 100 stars, then the “random” output would range from 0 to 100. Then, after our machine calculates that, it would need to somehow algebraically manipulate the number of apples it receives as the input to determine the number of slices. The following equation demonstrates this behavior:</p>
+
+<p>\[
+y = 1 + s \times \frac{3}{100}.
+\]</p>
+
+<p>In this case, $s$ is the number of glowing stars. The reason the “1” is outside the division is to ensure that the output is at least 1—after all, we don’t want our trader left with no slices. For the division part, consider this: if the number of glowing stars were 100, then it would produce slices(100) = 4 slices for one apple, which is the exact upper bound we want. We can’t have any more than 100 glowing stars, so this function is well defined.</p>
+
+<p>We can now create a function that takes input $x$, the number of apples, which gets multiplied by the expression equal to y.</p>
+
+<p>\[
+\operatorname{slices}(x) = (1 + s*3/100) * x.
+\]</p>
+
+<p>Notice that in this case, $s$ is not in the parentheses of the function, which means that it is constant across all $x$ inputs we give. This is because the function is <em>representing what the user interfaces with</em>. In reality, $s$ could be a function in and of itself, but in this case we don’t know how to actually calculate the number of glowing stars, so we use it as a hypothetical variable.</p>
+
+<h2 id="complex-numbers--circles">Complex Numbers &amp; Circles</h2>
+
+<p>However, one thing that remained a mystery for a while is the square root operation. First of all, the reason we call it the square root is because it is the inverse of the square, and that name comes from the area of a square in geometry— which is equal to the multiplication of any two side lengths, which are equal by definition.</p>
+
+<p>We know from school that, if you multiply a negative number by itself, you are always going to get a positive number. But have you considered why that’s the case? Think about this for a moment: if you wanted to rotate a number 180 degrees to the other side of the line—that is, draw a perpendicular line at zero and find the “mirror point” of your number (labeled x on the graph)—how would you do that?</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_8_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Consider the number 3. The mirror point, just by looking at this graph, should intuitively be -3. How could we define our number system to do that? Well, we could make it so that multiplying 3 by -1 yields -3. Multiplication is usually stated as repeated addition a certain number of times (for instance, -1 * 2 is -1 repeated 2 times, so -2), but repeating something a negative amount of times (in the case where both numbers being multiplied are negative, since you cannot swap them to form a positive number of times) does not make sense in that regard, so let’s consider this utility as a <em>rotation</em> instead. (See Appendix A for a rigorous axiomatic explanation.) In a similar manner, if we started at -3, with the same logic, we should multiply by -1 to rotate it 180 degrees to the corresponding mirror point. (It’s really a reflection about 0 until we introduce planes.) From this we can infer that our new system, for multiplication of negative numbers, strictly gives positive numbers.</p>
+
+<p>Now, about the square root: our initial definition for it is to give us the original number after it being multiplied by itself. For example, $3 \times 3 = 9$, so $\sqrt{9}$ should be 3. So for any number $1, 2, \ldots$, you should be able to get back the original value from such a multiplication. (Zero is a special case and a very peculiar number, which will get an entire article dedicated to it in the future.) What about the negative numbers which we just defined, which have been proven useful for rotations on a line? Well, let’s try one. Maybe $-3 \times -3$, which gives 9.</p>
+
+<p>Now imagine someone gives you the number 9 and, without any of the calculations that you just did, asks you to find the square root. You maybe inclined to tell the person that it is -3 since that’s the number you multiplied to get it. But then he gives you a counterexample: what about positive 3? The square root is, fundamentally speaking, a function, which we have seen gives you a unique output for each input, so it wouldn’t make sense for the square root function to give you two different results when plugging in 9. Also, the square root is especially useful in geometry, where negative side lengths for squares do not exist, so it doesn’t really make sense to say that it can give negative results. So lets restrict its output to positive numbers.</p>
+
+<p>However, one issue still stands. Suppose that someone has multipled a magic value twice and given an output of -1. Lets try to consider what could give that result. Maybe $1 \times 1$? Hmm, still 1. $1 \times (-1)$? They aren’t the same numbers, so that’s not allowed. And how about $(-1) \times (-1)$? Well, by our definition it should also give 1, so this doesn’t seem like the answer either. So what is it?</p>
+
+<p>Well, to resolve that debate, lets go back to our lovely number line. We said how multiplying by -1 gives you the number rotated 180 degrees. But why just 180 degrees? Why not, for example, half of that? Try to imagine where a number like 1 would fall if you just rotated 90 degrees, counterclockwise. Evidently, if we label the perpendicular line that we constructed with equidistant points, it should fall 1 units above the intersection point, as shown here:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_10_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Geometrically, doing two 90 degree rotations in the same direction should be the same as doing a single 180 degree rotation. Since we previously multiplied by a particular number (-1) to get the desired rotation, maybe we have to do the same here. Whatever that special value we have to multiply it with to get a 90 degree rotation is, multiplying that result by the special value again should give us the equivalent of a 180 degree rotation:</p>
+
+<p>The number that it should fall to after rotating 90 degrees has been labeled $x$, and after 90 degrees again, y.</p>
+
+<p>For the sake of a thought experiment, lets label that special value by i. Our rules for this value is that multiplying any number by it (say 1) once should give as a 90 degree rotation, and multiply the result of that by $i$ again should give us 180 degrees of rotation in total. That means it must be the result of 1 * (-1), which we know is -1. In other words, $i \times i$ (or in other words, $i^2$) is equal to -1. Even though such a number doesn’t actually exist (it isn’t something that we can naturally see like $1, 2, 3, \ldots$), pretending that it does exist gives us a lot of insight about algebraically expressing such rotations.</p>
+
+<p>Going back to our square root problem, lets think about what we had. We essentially wanted to know what the square root of a negative number should be. (Remember, it’s just the number that we multiplied by itself to get a negative result.) Hmm, since we have $i^2 = -1$, what if we say that the square root of -1 equals $i$? Congratulations, you have just discovered complex numbers. Not that complex after all, right?</p>
+
+<p>Well, we also might want the square root of -2, -3, etc. It can be proven that the square root of a product of numbers, $a$ and $b$, when $a, b \geq 0$, can be split into two square roots. Understanding why this is the case isn’t really important for the purpose of this article. So the square root of a and b is equal to the square root of a, times the square root of b. That means the square root of -2 can be split into $\sqrt{-1}$ and $\sqrt{2}$, so the result should be $i \times \sqrt{2}$. So by treating $i$ as the unit of rotation, we can get rotations for any other numbers too.</p>
+
+<p>We now have a complete system for representing intermediate rotations on our number line, and more precisely, rotations on a a plane. A plane is the space of all of the points formed by two perpendicular lines. (Interestingly enough, there are systems for representing rotations in more dimensions too, like quarternions for 3D spaces, which have 3 perpendicular lines. They follow a very similar logic to the one we used here. This might be touched on in a later article.)</p>
+
+<p>What does our rotation system remind us of? Circles! First, remember what a circle is: it is the set of all points that are equally distant from a center point. Take a look at a circle like the one shown here:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_14_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Notice how the points 1 and -1 from all axes are equally distant. It indeed makes sense to define the unit circle as having radius 1, just like we used 1 as the basis of all of our other transformations thus far.</p>
+
+<p>So how can we represent such a circle with an algebraic equations? Let’s place a circle on a plane and see what it looks like.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_16_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We can imagine this as a circle halved and so we have two halves of a circle. First of all, how can we get any point of this circle? In other words, how do we calculate the <em>distance</em> from (0, 0) to any point on a circle, (x, y)?</p>
+
+<p>This problem can be modeled using <em>right triangles</em>, which are triangles with an angle equal to 90 degrees. The angle formed by the intersection of our two perpendicular lines of the plane fits that model.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_18_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>The triangle has a vertical and horizontal line. Those lines are equal to the $x$ and $y$ position of our point on the triangle respectively. Notice what happens if we move the circle one unit to the right:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_20_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Now we have to account for a difference of 1, so instead of the lines being $x$ and $y$, they will be x - 1 and y - 1. In general, such differences will be written as $\Delta x = x - x_0$ and $\Delta y = y - y_0$.</p>
+
+<p>Notice how the legs of the triangle ($\Delta x$ and $\Delta y$) get stretched alongside the third side, which we will call the hypotenuse. (You can remember the hypotenuse as the side that is not perpendicular to any other.) You can see this as an illustration with the interactive slider below:</p>
+
+<p><strong>[SLIDER OUT OF ORDER]</strong></p>
+
+<p>A theorem known as the Pythagorean theorem indeed confirms our suspicion that the side $c$ can be expressed in terms of $a$ and $b$. In general, for any right triangle with legs $a$ and $b$ and hypotenuse $c$,</p>
+
+<p>\[
+a^2 + b^2 = c^2.
+\]</p>
+
+<p>In our case, that means the distance we are looking for, which is written $d$ instead of $c$, can simply be expressed as</p>
+
+<p>\[
+d^2 = (x - x_0)^2 + (y - y_0)^2.
+\]</p>
+
+<p>Solving for $d$, we get</p>
+
+<p>\[
+d = \pm \sqrt{(x - x_0)^2 + (y - y_0)^2}.
+\]</p>
+
+<p>Note that the square, as we explained previously, ensures distance is always nonnegative, which is geometrically sound. Also, we have two solutions for the distance as expected.</p>
+
+<p>Okay, so now we know how to get the distance from the starting point to any point on the circle. Since this guarantees to capture every point on the circle, we are done! All we need is to plug and chug the respective values for $x_0$ and $y_0$ depending on what we want our offset of the circle to be. In the general case, however, we will assume that the circle is centered for the sake of simplicitly of calculations, or in other words, $x_0 = 0$ and $y_0 = 0$, giving us</p>
+
+<p>\[
+d = \pm \sqrt{x^2 + y^2}, \quad
+x^2 + y^2 = d^2.
+\]</p>
+
+<h2 id="ratios-trigonometry--parametric-coordinates">Ratios, Trigonometry &amp; Parametric Coordinates</h2>
+
+<p>Hmm, our circle is cool and all, but it uses two variables. Is there an equation we can use to represent a circle with a single variable?</p>
+
+<p>Previously, triangles seemed pretty good at modeling the inner part of the circle, so maybe we have to use something similar to find such a relation. Perhaps there is some sort of relationship between the sides of the triangle in the circle? When mathematicians were thinking about this problem way back, they realized something:</p>
+
+<p>From algebra, we know that division can be used for resource allocation. For instance, if you have 4 kids and 8 cups of juice, $8 \div 4$ signals that 2 cups of juice should be allocated to each kid; more precisely, we say that the <em>ratio</em> of juice per kid is 2:1.</p>
+
+<p>When you hear ratio, what you should think of is not splitting items fairly but relative comparisons. For example, suppose Alice is 150 cm tall and Bob is 180cm. The ratio of their height, 180 : 150, can be simplified to 6:5. The benefit with relative comparisons is that you do not need to comprehend the true size of the unit system, but instead you simply compare its usage with other samples. In our example, the samples are centimeters. If we converted them to meters, their ratio would still be the exact same! (Try that yourself.) In fact, ratios are unit-independent—that’s one of the reasons why are so powerful. But you need to be careful and use the same units for both quantites being compared, otherwise the comparison is nonsensical.</p>
+
+<p>How does this fit to our triangle relationship problem? Well, we could try comparing the sides of it and see if we get any meaningful metrics. For instance, for this triangle:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_24_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We could first check the ratio of the two legs, 6 : 4. Observe that if the hypotenuse is stretched far out, any ratio of the legs will remain the same.</p>
+
+<p>This is… very interesting. Also, if we stretch the hypotenuse while keeping the legs the same, the triangle is no longer a right triangle! Lets investigate that further with a ratio between the hypotenuse and one of the legs. When you play with the values, you find that ratio to remain the same as well. This seems very promising and is a worthwhile candidate for our search towards a single-variable circle equation.</p>
+
+<p>Mathematicians noticed these relationships that are maintained specifically for right triangles and assigned special values to them. The ratio between the leg that the angle theta points to and the hypotenuse, for example:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_26_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>was called <em>sine</em>, later abbreviated <em>sin</em> (which is a sin in and of itself, if you ask me). And since we have demonstrated that the ratios do indeed stay the same, it can be uniquely represented with a single value, the angle $\theta$ itself! So our research totals to a function $\sin(\theta)$, where</p>
+
+<p>\[
+\sin(\theta) = \frac{\text{opposite side}}{\text{hypotenuse}}.
+\]</p>
+
+<p>(In mathematics, you will often see the notation abbreviated as $\sin \theta$, but it means the exact same thing.)</p>
+
+<p>Similarly, the following functions were defined:</p>
+
+<p>\[
+\cos \theta = \frac{\text{adjacent side}}{\text{hypotenuse}}, \quad
+\tan \theta = \frac{\text{opposite side}}{\text{adjacent side}}.
+\]</p>
+
+<p>These three functions are also called <em>trigonometric functions</em>, and since they satisfy $x^2 + y^2 = 1$, their maximum value is 1 and their minimum value is -1. (To see why: if $x^2 + \sin^2 \theta$ = 1, then $\sin^2 \theta = 1 - x^2$ and since $x^2 \geq 0$ and $1 - x^2 \leq 1$, $0 \leq \sin^2 \theta \leq 1$, and so taking square roots yields $-1 \leq \sin \theta \leq 1$ because $\sin \theta = + \sqrt{1 - x^2} \leq 1$ or $\sin \theta = - \sqrt{1 - x^2} \geq -1$)</p>
+
+<p>Remember our old friend, the distance formula? Well, you probably do because I told you about it 2 seconds ago. But anyway, before we consider how it connects to these trigonometric values, lets restrict the radius to 1 for simplicity:</p>
+
+<p>\[
+x^2 + y^2 = 1.
+\]</p>
+
+<p>(The number 1 is the assignment of $d^2$.)</p>
+
+<p>This gives us our unit circle once again. Now, lets draw a triangle inside that circle.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_28_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Clearly, the opposite side of $\theta$ is $y$ and the adjacent side is $x$. Notice that since the hypotenuse is 1, $\sin \theta = \frac{y}{1} = y$ and $\cos x = \frac{x}{1} = x$. This fact saves us the hassle of dealing with ratios, but remember that it only holds for unit circles!</p>
+
+<p>But wait, we just said $x^2 + y^2 = 1$. It follows, at least in this case, that</p>
+
+<p>\[
+(\cos \theta)^2 + (\sin \theta)^2 = 1.
+\]</p>
+
+<p>By applying some more notational magic,</p>
+
+<p>\[
+\cos^2 \theta + \sin^2 \theta = 1.
+\]</p>
+
+<p>This is huge. Massive, even. A simple fact that ratios aid relative comparisons got transformed into us finding such a useful result.</p>
+
+<p>With trivial multiplication, this can be extended to be a general result:</p>
+
+<p>\[
+k \cos^2 \theta + k \sin^2 \theta = k.
+\]</p>
+
+<p>Okay, so now we have a single-variable representation of points on a circle. What if we wanted to simplify this problem further by not having any squares or any of that jazz? Yet another old friend comes into the rescue.</p>
+
+<p>Recall that with imaginary numbers, multiplying a number (say, $b$) by $i$ gives you a rotation. Adding a real number to that, i.e. $a + bi$, can be used to represent a point, where $a$ is the point on the x-axis and $bi$ is the point on the y-axis:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_30_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>In other words, any point $(x,y)$ is represented on the complex plane with $a + bi$. If we combine that with the fact that any point on a unit circle $(x,y) = (cos \theta, sin \theta)$, we find that</p>
+
+<p>\[
+z = cos \theta + i sin \theta
+\]</p>
+
+<p>is the corresponding point of the circle on the complex plane.</p>
+
+<h2 id="natural-logarithm-e--eulers-formula">Natural Logarithm, e &amp; Euler’s Formula</h2>
+
+<p>In the late 1500s to early 1600s, astronomers and navigators had to compute stupidly large numbers like $(1.00023)^{7423}$ or multiply many large numbers repeatedly. This was very annoying to say the least, so the dream was to replace multiplication with addition.</p>
+
+<p>John Napier was one of those mathematicians. To help progress this search, he researched a lot of sequences. What he found was that there is a connection between arithmetic progressions and geometric decay. For example, he placed the sequence of natural numbers in one table</p>
+
+<p>\[
+0, 1, 2, 3, \ldots
+\]</p>
+
+<p>and the geometric decay in another:</p>
+
+<p>\[
+1, 0.9999999, 0.9999998, 0.9999997, \ldots
+\]</p>
+
+<p>This is a pair of two evolving quantities. Napier defined the logarithm as the <em>index</em> that connects the two. (For example, in a sequence 2, 4, 6, 8, …, the number 6 is located at index 3.)</p>
+
+<p>Suppose you have:</p>
+
+<p>\[
+x = (1 - \varepsilon)^n
+\]</p>
+
+<p>Then:</p>
+
+<p>\[
+\log(x) = n
+\]</p>
+
+<p>By multiplying two numbers:</p>
+
+<p>\[
+x_1 x_2 = (1 - \varepsilon)^{n_1 + n_2}
+\]</p>
+
+<p>So</p>
+
+<p>\[
+\log(x_1 x_2) = \log(x_1) + \log(x_2).
+\]</p>
+
+<p>This property was the entire point of the link between the two sequences. Now, instead of decay, if you imagine growth:</p>
+
+<p>\[
+(1 + \varepsilon)^n
+\]</p>
+
+<p>As $\varepsilon$ gets smaller and $n$ gets larger in just the right way, the expression stabilizes. If we let $\varepsilon = \frac{1}{n}$, then we get</p>
+
+<p>\[
+(1 + \frac{1}{n})^n.
+\]</p>
+
+<p>You can see the table of values of this function approach a value:</p>
+
+<ul>
+  <li>$n = 10$: 2.594</li>
+  <li>$n = 100$: 2.705</li>
+  <li>$n = 1000$: 2.717</li>
+  <li>$n = 10000$: 2.718</li>
+</ul>
+
+<p>This number kept appearing, regardless of the table’s construction. He tried many sequences besides these two and the results always matched. The number that it approached was later named $e$:</p>
+
+<p>\[
+e = \lim_{n \to \infty} (1 + \frac{1}{n})^n
+\]</p>
+
+<p>The “lim” is an operator that tells you what value you see a function get close to as you increase the input $n$. It’s going to be used a lot in following chapters.</p>
+
+<p>This number $e$ is commonly used for compound interest, calculating the growth of populations, the cooling laws of physics, and many more fields.</p>
+
+<p><strong>This part is not finished.</strong></p>
+
+<h2 id="division-by-zero--limits-in-more-detail">Division by Zero &amp; Limits in More Detail</h2>
+
+<p>Your middle school teacher probably taught you that division by zero is a big no-no. But why is that the case? Lets check what happens when we divide 10 by integers that get smaller and smaller.</p>
+
+<ul>
+  <li>$10 \div 10 = 1$.</li>
+  <li>$10 \div 9$ = 1.111…</li>
+  <li>$10 \div 8$ = 1.25.</li>
+  <li>…</li>
+  <li>$10 \div 3 = 3.333…$</li>
+  <li>$10 \div 2 = 5$</li>
+  <li>$10 \div 1 = 10$.</li>
+</ul>
+
+<p>No matter what, as we go lower and lower, the value increases. The result is only going to start to decrease if we go even lower, to negative values:</p>
+
+<ul>
+  <li>$10 \div (-1) = -10$</li>
+  <li>$10 \div (-2) = -5$</li>
+  <li>$10 \div (-3) = -3.333…$</li>
+</ul>
+
+<p>If we focus on one of these particular divisions by positive or negative values, like $10 \div 2$ which equals 5, we notice that the function “wraps” around that value for very small differences, from both sides. For example, from the right side:</p>
+
+<ul>
+  <li>$10 \div 2.01 \approx 4.975.$</li>
+  <li>$10 \div 2.001 \approx 4.998.$</li>
+  <li>$10 \div 2.0001 \approx 4.999.$</li>
+</ul>
+
+<p>And from the left side:</p>
+
+<ul>
+  <li>$10 \div 1.99 \approx 5.025$</li>
+  <li>$10 \div 1.999 \approx 5.0025$</li>
+  <li>$10 \div 1.9999 \approx 5.00025$</li>
+</ul>
+
+<p>So in fact, if we had chosen any number for division other than 2, we will see the division wrap around the result of it for arbitrarily small differences from either side.</p>
+
+<p>Lets analyze division by 0 and see if the same happens. From the right side:</p>
+
+<ul>
+  <li>$10 \div 0.01 = 1000$</li>
+  <li>$10 \div 0.001 = 10000$</li>
+  <li>$10 \div 0.0001 = 100000$</li>
+</ul>
+
+<p>And again, from the left side:</p>
+
+<ul>
+  <li>$10 \div (-0.01) = -1000$</li>
+  <li>$10 \div (-0.001) = -10000$</li>
+  <li>$10 \div (-0.001) = -100000$</li>
+</ul>
+
+<p>So in fact, the division does <em>not</em> wrap around a particular value for division by very small differences from 0. This means we cannot be confident about what value the operation stabilizes to in order to be able to define division by zero.</p>
+
+<p>Why does this happen? We saw before that for negative values, the function actually decreases, and since 0 is the “limit” point of where the function’s behavior is increasing or decreasing for the division, so it makes sense why this is treated as an undefined point for division.</p>
+
+<p>To be precise, we conclude that if we approach 0 with very small differences from the positive side, the division goes to infinity, and if we approach 0 with very small differences from the negative side, the division goes to negative infinity. This is also why “infinity” isn’t actually a number but rather an idea; that something keeps on increasing or decreasing without bound, so the “negative” infinity that you see with a minus isn’t literally multiplying by $-1$.</p>
+
+<p>This idea of limit points is formalized with the operator we saw before — the limit. There are right-side limits and left-side limits, denoted with + and - respectively above the value being approached. Based on our analysis, we can clearly see that</p>
+
+<p>\[
+\lim_{x \to 2^+} \frac{10}{x} = 5, \quad 
+\lim_{x \to 2^-} \frac{10}{x} = 5.
+\]</p>
+
+<p>This is read like, “as the input x approaches 2, 10/x approaches 5 from both the right and left side.” Furthermore,</p>
+
+<p>\[
+\lim_{x \to 0^+} \frac{10}{x} = \infty, \quad 
+\lim_{x \to 0^-} \frac{10}{x} = - \infty.
+\]</p>
+
+<p>However, don’t assume that the limit existing means you can evaluate the function at that point. For example, if you have</p>
+
+<p>\[
+f(x) = \frac{x^2 - 1}{x - 1}
+\]</p>
+
+<p>and you want to know the limit of it as $x$ approaches 1, then if you analyze the limit using the same approximation technique and check what value it wraps around, you find that</p>
+
+<p>\[
+\lim_{x \to 1} f(x) = 2.
+\]</p>
+
+<p>However, calling the function with $x = 1$ gives us division by zero, which is undefined:</p>
+
+<p>\[
+f(1) = \frac{1^2 - 1}{1 - 1} = \frac{0}{0}.
+\]</p>
+
+<p>Also, limits can sometimes simply be inferred by looking at the graph of the function:</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_32_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Therefore the limit at $x = 1$ exists but $f(1)$ itself is not the number it approaches.</p>
+
+<p>Limits can also be computed with algebraic tricks. For example, we see that</p>
+
+<p>\[
+\lim_{x \to 1} f(x) = \lim_{x \to 1} \frac{x^2 - 1}{x - 1} = \lim_{x \to 1} \frac{(x-1)(x+1)}{x-1} = \lim_{x \to 1} (x + 1) = 2.
+\]</p>
+
+<p>So to wrap things up (no pun intended), division by zero is undefined, and one informal way is to check how the operation you are interested in behaves for very small differences and if it wraps around a particular value (it doesn’t have to be division; it could be anything). And if you want to be 100% sure that your approximation is not misleading or incorrect, you use algebra to rigorously calculate the limit.</p>
+
+<h2 id="rate-of-change--derivatives">Rate of Change &amp; Derivatives</h2>
+
+<p>In a previous chapter, we discussed functions. One thing that we might want is a reliable metric that tells us how fast a function changes in a particular range of inputs. For instance, let $f(x) = x$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_34_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Let us take any two positions, $a = 2$ and $b = 4$. So we are interested in how quickly the function changes inputs in the range of values between $a$ and $b$. Looking at the function’s graph, we see that the function grows exactly the same for any range that we choose, regardless if the particular $a$ and $b$ we choose. So when defining this “rate of change,” it should remain constant.</p>
+
+<p>Really, we are interested in a relative comparison of the input and the output of the function during that range. We know from previous chapters that the way to calculate that difference is $b - a$ and $f(b) - f(a)$ for the inputs and outputs, respectively.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_36_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Now, recall that ratios are a great way to gain a relative measure for comparing two quantities, regardless of the metric system used and the size of other quantities in the same system. So we can find the relative difference with the formula</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a}.
+\]</p>
+
+<p>Why did we put $f(b) - f(a)$ at the top and not at the bottom? Because when that value increases we want the rate of change of the function in the interval from $a$ to $b$ to increase, and conversely, decrease when $f(b) - f(a)$ decreases.</p>
+
+<p>If we try this for our values, we find that</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} = \frac{4 - 2}{4 - 2} = 1.
+\]</p>
+
+<p>is our desired rate of change. And in fact, the rate of change “1” remains constant for any $a$ and $b$.</p>
+
+<p>We can try this formula with other functions as well. Let $g(x) = x^2$ be an exponential function and use the same $a$ and $b$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_38_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Then we find that</p>
+
+<p>\[
+\frac{g(b) - g(a)}{b - a} = \frac{4^2 - 2^2}{4 - 2} = \frac{16 - 4}{4 - 2} = 6,
+\]</p>
+
+<p>which does <em>not</em> remain constant if we make other choices of $a$ and $b$. This can be seen in the graph since the functions output explodes for large inputs.</p>
+
+<p>Why restrict the idea of “rate of change” to intervals? Say we want to know how the function behaves at a particular point $a$. Then in our formula, we could set $b$ be addition to it like $0.001$ to get a very small measure. So we set $b = a + 0.001$ and we try $a = 3$:</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} = \frac{f(3.001) - f(3)}{3.001 - 3} = 6.001.
+\]</p>
+
+<p>This doesn’t seem much, but repeating the process for larger values reveals that the rate of change is increasing very fast. For example, $a = 100$:</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} = 200.001.
+\]</p>
+
+<p>We have a constant $0.001$ at the end because of our choice for $b$, so we could make our formula subtract it after the addition to make the rate of change look a little bit nicer. Since so far our selection has been $b = a + 0.001$, lets generalize this by setting $b = a + h$, where $h$ is a very small constant. Then our formula becomes</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} - h.
+\]</p>
+
+<p>It can be simplified further:</p>
+
+<p>\[
+\frac{f(b) - f(a)}{b - a} - h = \frac{f(a + h) - f(a)}{(a + h) - a} - h.
+\]</p>
+
+<p>So in the end we have:</p>
+
+<p>\[
+\frac{f(a + h) - f(a)}{h} - h.
+\]</p>
+
+<p>Now we have the rate of change of the function at a particular point with a very small difference, so we could call it the “pointwise” rate of change (or in standard texts, instantaneous rate of change). Lets denote this operation with a special name:</p>
+
+<p>\[
+f’(x) = \frac{f(a + h) - f(a)}{h} - h.
+\]</p>
+
+<p>There is one problem with the current variation of this formula, however. Consider $h(x) = -x^2$. Then for $a = 10$ and $b = a + 0.001$,</p>
+
+<p>\[
+\frac{h(10.001) - h(10)}{10.001 - 10} = -20.001,
+\]</p>
+
+<p>and adding 0.001 to it makes it -20.002 rather than a nice -20, so our initial oversimplification of the solution being just subtracting h is not correct. However, we will see that this does not change the notion of our formula at all.</p>
+
+<p>In general, for the pointwise rate of change, we care about extremely small differences only; infinitesimally small. So instead of having h be a chosen constant, we can let it be a limit:</p>
+
+<p>\[
+f’(x) = \lim_{h \to 0} (\frac{f(a + h) - f(a)}{h} - h).
+\]</p>
+
+<p>Notice how the division grows independently and far larger from the subtraction $h$, so as $h$ approaches 0, that subtraction actually vanishes:</p>
+
+<p>\[
+f’(x) = \lim_{h \to 0} \frac{f(a + h) - f(a)}{h}
+\]</p>
+
+<p>Let us call $f’(x)$ the <em>derivative</em>. The property of the limit we just discovered can be generalized to this: for <em>any</em> function $f(x)$ and $g(x)$,</p>
+
+<p>\[
+\lim_{x \to c} (f(x) + g(x)) = \lim_{x \to c} f(x) + \lim_{x \to c} g(x).
+\]</p>
+
+<p>Finally, if you use a limit calculator, you find that</p>
+
+<p>\[
+h’(a) = h’(10) = -20,
+\]</p>
+
+<p>so this verifies that our problem has been fixed without actually needing to address the issue.</p>
+
+<p>As one final note, if you go back to the examples of the early version of the derivative for $g(x)$, our approximation were very close to the value of $2x$ but with $x = a$. In fact, it can be proven that</p>
+
+<p>\[
+g’(x) = 2x,
+\]</p>
+
+<p>so you don’t need to deal with limits at all! You can verify this by manually computing it for any value:</p>
+
+<p>\[
+g’(2) = \lim_{h \to 0} \frac{g(2 + h) - g(2)}{h} = \lim_{h \to 0} \frac{(2 + h)^2 - 2^2}{h} = \lim_{h \to 0} \frac{4 + 4h + h^2 - 4}{h} = \lim_{h \to 0} \frac{h(4 + h)}{h}.
+\]</p>
+
+<p>So it simplifies to:</p>
+
+<p>\[
+g’(2) = \lim_{h \to 0} (4 + h) = 4.
+\]</p>
+
+<p>Our takeaway from this: besides the fact that we have a nice pointwise rate of change formula, miniscule differences with limits usually abstract away and contribute nothing in the long run. That’s one of the reasons limits are very powerful.</p>
+
+<h2 id="areas-of-functions--integrals">Areas of Functions &amp; Integrals</h2>
+
+<p>What does area actually represent in mathematics? Imagine you have a chess board. The chess board has rows 1, 2, 3, all the way to 8 and similarly columns 1, 2, 3, all the way to 8.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_40_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>This means that, with multiplication, we find that the total number of slots for pieces are $8 \times 8$. This covers every single possible combination of row and column. So the value $8 \times 8$ could be considered the <em>area</em> of the board.</p>
+
+<p>Notice that the value we can set for the row and column position is <em>discrete</em>. For example, we can’t say row 4.5 and column $\sqrt{2}$. In other words, we only accept integer values.</p>
+
+<p>In mathematics, we extend this idea for real numbers as well. But notice how we cannot describe the area when talking about real positions as the number of possible coordinates $(x, y)$ we can position in the shape, because the number of decimals for any real number is infinite, so we would have infinite such coordinates. (For example, for the integer 4, some decimal positions are 4.1, 4.01, 4.001, 4.0001, …) Instead, how you should think about it is that it “fills” the entire area of the geometric shape.</p>
+
+<p>What is the area of a square? Take, for example, the square shape below.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_42_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We can see that each of the side lengths is 4, so the area should be $4 \times 4 = 16$.</p>
+
+<p>What if we cut the square diagonally?</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_44_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>This forms two right triangles. To calculate the area of each, thinking about the area of the shape as the total that fills it, it’s only natural to halve it. So the area of each triangle is $4 \times 4 \times \frac{1}{2} = 8$. In general, we can calculate the area of any right triangle with legs $a$ and $b$ with $a \times b \times \frac{1}{2}$.</p>
+
+<p>Now pay close attention to this example. Let $f(x) = x + 1$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_46_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We want a general formula for the area of $f(x)$ — specifically, the part from the triangle formed starting from $x = 1$ and some arbitrary point $x_0$ with $x_0 &gt; 1$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_48_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>Because of the offset of 1, the base of the triangle will be $x - 1$. The height of the triangle is just $f(x)$, so our area is</p>
+
+<p>\[
+A(x) = \frac{1}{2} (x - 1)(x + 1) = \frac{1}{2} x^2 - x + \frac{1}{2}
+\]</p>
+
+<p>Nothing out of the ordinary. However, observe what happens if you compute the derivative:</p>
+
+<p>\[
+A’(x) = x - 1.
+\]</p>
+
+<p>It is simply the original function! Why is this happening? Our observation is that the derivative of the area of a function is equal to the function itself.</p>
+
+<p>If we have a more complicated function like $x^2$, which is not linear, calculating its area for specific intervals is going to be difficult. Could we perhaps find a way to generalize this result to compute areas under curves?</p>
+
+<p>From our example, we could define such an operator with the $\int$ symbol and name it <em>the integral from $x$ to $x_0$</em>. Then we have</p>
+
+<p>\[
+\int_x^{x_0} f(x) = A(x).
+\]</p>
+
+<p>So the first integration rule we have discovered is</p>
+
+<p>\[
+\int (x - 1) = \frac{1}{2} (x - 1)^2.
+\]</p>
+
+<p>If you follow the exact same steps with $f(x) = x$ instead, you find that</p>
+
+<p>\[
+\int x = \frac{1}{2} x^2.
+\]</p>
+
+<p>What other rules exist? Integration appears to be the opposite of differentiation, and inverse operations in mathematics are generally more difficult. Finding the exact formula for an integral without an approximation technique is generally difficult, so for this reason mathematicians have developed a set of integration rules that are applied systematically to compute the integral. These rules could have been found simply by differentiating random functions based on your intuition, to make them equal to the desired area.</p>
+
+<p>Surprisingly, an approximation technique will let us formalize the definition of an integral. Consider the $f(x)$ again but partitioned into many blocks. These blocks have height equal to f(x).</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_50_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>We might not be able to compute areas of complicated functions with standard area shape formulas, but by creating these blocks, we can calculate each individually and then sum them up to get an estimate of the area. This means the smaller the blocks, the more accurate the approximation.</p>
+
+<p>To do so, we will start with a function $f(x) = x^2$.</p>
+
+<p><img src="/assets/notebooks/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond_52_0.svg" alt="svg" class="jupyter" loading="lazy" /></p>
+
+<p>To be able to sum the up smoothly, the width of each block is equal. Let $t$ be the width of the interval that we are interested the area of. If we were interested in a particular range, it would be $b - a$. Then the width of each block is $\frac{t}{n}$, where $n$ is the number of blocks we want. Lets call it $\Delta x$.</p>
+
+<p>\[
+\Delta x = \frac{t}{n}.
+\]</p>
+
+<p>This evenly slices it for each block.</p>
+
+<p>For a practical demonstration, let $n = 5$ and $t = 10$. Then</p>
+
+<p>\[
+\Delta x = \frac{10}{5} = 2.
+\]</p>
+
+<p>So the interval $[0, 10]$ is divided into the subintervals:</p>
+
+<p>\[
+[0, 2], [2, 4], [4, 6], [6, 8], [8, 10].
+\]</p>
+
+<p>Now there is a crucial decision for us to make. We need to choose which point we will use to calculate the height of each subinterval’s block. It doesn’t matter which point we choose as long as we keep the choice the same for all subintervals.</p>
+
+<p>For example, if we pick the rightmost point of each subinterval, then for each one, our choices would be</p>
+
+<p>\[
+x^{\ast}_1 = 2, x^{\ast}_2 = 4, x^{\ast}_3 = 6, x^{\ast}_4 = 8, x^{\ast}_5 = 10.
+\]</p>
+
+<p>The use of asterisk to denote these special variables is merely a stylistic choice and there isn’t a particular reason they are used.</p>
+
+<p>With these choices, the area of the first block, for instance, would be</p>
+
+<p>\[
+f(x^{\ast}_i) \cdot \Delta x.
+\]</p>
+
+<p>Remember that $\Delta x$ is the base and that $f(x^*_i)$ is the height. So we can do the same for the rest of the blocks and get an approximation of the area under the curve.</p>
+
+<p>\[
+\int_0^{10} f(x) \approx \Delta x (f(x^{\ast}_1) + f(x^{\ast}_2) + f(x^{\ast}_3) + f(x^{\ast}_4) + f(x^{\ast}_5)).
+\]</p>
+
+<p>This result can be generalized. When we have a sum in mathematics like</p>
+
+<p>\[
+1 + 2 + 3 + \ldots + n
+\]</p>
+
+<p>we can denote it as</p>
+
+<p>\[
+\sum_{i=1}^n i.
+\]</p>
+
+<p>The $i = 1$ is the initial value of the variable. The expression in front of the Greek letter $\Sigma$ is what is being added each time. It gets added up until $i$ reaches $n$.</p>
+
+<p>So our previous expression can be simplified to</p>
+
+<p>\[
+\int_0^{10} f(x) \approx \Delta x \sum_{i=1}^5 f(x^{\ast}_i)
+\]</p>
+
+<p>We don’t need to restrict it to sums of 5 blocks:</p>
+
+<p>\[
+\int_0^{10} f(x) \approx \Delta x \sum_{i=1}^n f(x^{\ast}_i),
+\]</p>
+
+<p>where $n$ is the number of blocks that were chosen as before.</p>
+
+<p>Then we apply the same idea that we did for the derivative where we made it shrink $h$ to 0, but here, we are gonna make the number of blocks grow without bound instead. That way, it is no longer an approximation but instead precisely equal to the integral itself. So we have</p>
+
+<p>\[
+\int_0^{10} f(x) = \lim_{n \to \infty} \Delta x \sum_{i=1}^n f(x^{\ast}_i),
+\]</p>
+
+<p>and more generally,</p>
+
+<p>\[
+\int_a^b f(x) = \lim_{n \to \infty} \Delta x \sum_{i=1}^n f(x^{\ast}_i),
+\]</p>
+
+<p>where $\Delta x = \frac{b - a}{n}$.</p>
+
+<p>Not only have we obtained a great approximation method, but we have a sufficiently rigorous definition of an integral now. Our updated view of an integral is the sum of blocks that partition a function $f(x)$ into equal subintervals, where the blocks become more and more.</p>
+
+<p>Before we continue, ask yourself this question to see if you truly understand what the limit does here: If we made $n$ smaller and smaller instead of larger and larger, what would happen to our approximation?</p>
+
+<p>Now, notice that since it is a sum of blocks, and more specifically, it is a sum of products of bases and heights. In fact, since $\Delta x$ is a variable defined based on $n$, when the base becomes really really small (as in $n \to \infty$), we refer to it as $dx$ instead. So you can imagine it (not literally the same) as</p>
+
+<p>\[
+dx = \lim_{\Delta x \to 0} \Delta x.
+\]</p>
+
+<p>The reason this convention was made was to be used directly inside the definition of the integral. Our integral notation $\int f(x)$ at the moment does not hint to us what variable is constant (for example, we could have $\int axyz$) and what is the actual one, so it is written as</p>
+
+<p>\[
+\int_a^b f(x)\, dx
+\]</p>
+
+<p>instead.</p>
+
+<p>Unfortunately, going deeper into how one finds a solution for an integral without reverse engineering it with the derivative would require more advanced knowledge from real analysis to decomposite it into its logical lower-sum and upper-sum definition, which is beyond the scope of this article, so our investigation on the rigor of it must be put at a stop here. The good news is that with our intuitive understanding of trigonometric functions, $e$, complex numbers, and differentiation/integration, we are ready to see much more advanced concepts.</p>
+
+<h2 id="the-fourier-transform">The Fourier Transform</h2>
+
+<p><strong>This section is under construction.</strong></p>
+
+<p>The main question the Fourier transform wanted to answer is: If a signal is made of waves, what waves are they, and how strong is each one?</p>
+
+<p>In other words, it decomposes the function and finds its recipe; it transforms a function from the time/space domain to the frequency domain.</p>
+
+<p>As an analogy, consider what happens when you hear a chord. You only hear one sound, but it is actually made of different notes, each one having its own pitch (called the frequency), and its own “loudness” (amplitude). Your brain automatically decomposes that chord, but Fourier does it mathematically.</p>
+
+<p>A signal is represented as a function of time, $f(t)$, and the Fourier transform transforms it into a frequency as $F(\omega)$. So instead of asking how much is the value at time $t$, you ask how much frequency $\omega$ is present.</p>
+
+<p>The reason sine/cosine waves are used is because they are perfectly smooth, repeat forever, and combine to approximate almost any signal. If you are familiar with the Taylor series, it uses the exact same idea but instead with a special kind of polynomial approximation. Sine/cosine waves will be more generally referred to as sinusoids.</p>
+
+<p>Its formula is</p>
+
+<p>\[
+F(\omega) = \int_{- \infty}^\infty f(t) e^{-i \omega t}\, dt
+\]</p>
+
+<p>It’s really just multipling by a complex wave $e^{-i \omega t}$ and then integrating to measure similarity. $e^{-i \omega t}$ traces a circle where the speed of rotation is the frequency $\omega$ and the radius its amplitude. So if we draw it as $t$ increases, a high frequency means a fast spinning circle, a low frequency means a slow spinning circles, a negative frequency means opposite direction, and zero frequency means constant point. This is useful because a circle is the geometric representation of a sinusoid.</p>
+
+<p>We can see this better by recalling Euler’s identity:</p>
+
+<p>\[
+e^{i \omega t} = cos(\omega t) + i sin(\omega t)
+\]</p>
+
+<h2 id="appendix">Appendix</h2>
+
+<h3 id="a--axioms-of-real-numbers">A — Axioms of Real Numbers</h3>
+
+<p>In algebra, the real numbers (2, 4.5, 2.222 repeating) are rigorously defined with a set of axioms. Some of these are:</p>
+
+<ul>
+  <li>Distributivity: $a \cdot (b + c) = a \cdot b + a \cdot c$</li>
+  <li>Multiplicative identity: $1 \cdot a = a$</li>
+  <li>Additive inverse: For every $a$, there exists $-a$ such that $a + (-a) = 0$.</li>
+</ul>
+
+<p>These can be used to extend the real number line to include negative numbers. We define -1 as the additive inverse of 1:</p>
+
+<p>\[
+1 + (-1) = 0.
+\]</p>
+
+<p>Now, using distributivity:</p>
+
+<p>\[
+0 \cdot 1 = (1 + (−1)) \cdot 1 = 1 \cdot 1 + (−1) \cdot 1.
+\]</p>
+
+<p>We know $0 \cdot 1 = 0$ and $1 \cdot 1 = 1$, so</p>
+
+<p>\[
+0 = 1 + (-1) \cdot 1
+\]</p>
+
+<p>implies</p>
+
+<p>\[
+(-1) \cdot 1 = -1.
+\]</p>
+
+<p>For multiplying a negative by another negative, we want $(-1) \cdot (-1)$. Again, we start from distributivity:</p>
+
+<p>\[
+0 = (-1) \cdot 0 = (-1) \cdot (1 + (-1)) = (-1) \cdot 1 + (-1) \cdot (-1).
+\]</p>
+
+<p>We know $(-1) \cdot 1 = -1$, so</p>
+
+<p>\[
+0 = -1 + (-1) \cdot (-1)
+\]</p>
+
+<p>implies</p>
+
+<p>\[
+(-1) \cdot (-1) = 1. \blacksquare
+\]</p>
+
+<h2 id="credits">Credits</h2>
+
+<ul>
+  <li><a href="https://wallpapercave.com/the-universe-wallpaper">Universe Wallpaper</a></li>
+</ul>
+
+        </article>
+        
+        <div class="separator"></div>
+
+        <section id="newsletter-section">
+          <h2>Enjoyed reading? Subscribe to my newsletter.</h2>
+          <div id="newsletter-container">
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+        </section>
+
+        
+
+
+<div class="author-bio separator">
+  <div class="author-credentials">
+    <img src="/assets/images/icons/quarterstar.svg" alt="Quarterstar" class="author-avatar">
+    <p class="shout">Quarterstar</p>
+  </div>
+  <div class="author-info">
+    <p>Machine learning researcher with special interests in 3D graphics, privacy enhancement, low-level programming, and mathematics.</p>
+  </div>
+  <div class="author-links">
+    
+      <a href="https://github.com/quarterstar"><img src="/assets/images/icons/github-mark.svg" alt="GitHub"></img></a>
+    
+    
+      <a href="https://github.com/quarterstar_"><img src="/assets/images/icons/Reddit_Icon_2Color.svg" alt="Reddit"></img></a>
+    
+    
+      <a href="https://discord.gg/vcfmKdceXF"><img src="/assets/images/icons/Discord-Symbol-Blurple.svg" alt="Discord"></img></a>
+    
+  </div>
+</div>
+
+
+        <div id="comment-section-container">
+        </div>
+      </main>
+
+      <template id="sidebar-right-template">
+        <aside id="sidebar-right">
+          <section id="inline-newsletter-section">
+  <h2>SUBSCRIBE TO NEWSLETTER</h2>
+
+  <div id="newsletter-container">
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</section>
+
+          <h2>RELATED ARTICLES BY TAG</h2>
+
+<section>
+  <ul id="matching-articles">
+  
+  </ul>
+</section>
+
+          <section>
+  <h2>RANDOM FRACTAL</h2>
+  <img width="50%" height="50%" src="/assets/images/graphics/fractals.png" loading="lazy">
+</section>
+
+        </aside>
+      </template>
+      <div id="sidebar-right-container"></div>
+    </div>
+
+    <footer>
+      <p>&copy; 1970–2026 Quarterstar, All Rights Reserved.</p>
+
+    </footer>
+
+    <script type="module" src="/assets/scripts/bundle.js"></script>
+
+  </body>
+</html>

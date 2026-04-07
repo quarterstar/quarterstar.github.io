@@ -1,0 +1,855 @@
+
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+
+    <link rel="preload" href="/assets/fonts/DejaVuSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ArchivoBlack-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/NotoSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+<link rel="preconnect" href="https://groot.mailerlite.com" crossorigin>
+<link rel="preconnect" href="https://utteranc.es" crossorigin>
+
+    <link 
+  rel="preload" 
+  as="image" 
+  href="/assets/images/backgrounds/surveillance-01.webp" 
+  fetchpriority="high"
+>
+
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta name="description" content="New C++23 feature known as concepts presents new compile-time opportunities">
+
+
+    <link rel="canonical" href="https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp/" />
+    <meta property="og:title" content="">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+    <meta property="og:url" content="">
+    <meta name="twitter:card" content="">
+
+    <title>Template Specialization & Concepts in C++</title>
+
+    <!-- Monkey patch -->
+<!-- <script type="text/javascript"> -->
+<!-- (() => { -->
+<!--     // 1. Function to apply attributes to the script element -->
+<!--     const patchScript = (el) => { -->
+<!--         if (el && el.tagName === 'SCRIPT' && el.src && el.src.includes('mlcdn.com')) { -->
+<!--             el.setAttribute('defer', ''); -->
+<!--             el.defer = true; -->
+<!--             // dynamic scripts are async by default; setting to false forces 'defer' behavior -->
+<!--             el.async = false; --> 
+<!--         } -->
+<!--     }; -->
+
+<!--     // Intercept setAttribute -->
+<!--     const originalSetAttribute = Element.prototype.setAttribute; -->
+<!--     Element.prototype.setAttribute = function(name, value) { -->
+<!--         originalSetAttribute.apply(this, arguments); -->
+<!--         if (name === 'src') patchScript(this); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (appendChild) -->
+<!--     const originalAppendChild = Node.prototype.appendChild; -->
+<!--     Node.prototype.appendChild = function(newNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalAppendChild.apply(this, arguments); -->
+<!--     }; -->
+
+<!--     // Intercept DOM insertion (insertBefore) -->
+<!--     const originalInsertBefore = Node.prototype.insertBefore; -->
+<!--     Node.prototype.insertBefore = function(newNode, referenceNode) { -->
+<!--         patchScript(newNode); -->
+<!--         return originalInsertBefore.apply(this, arguments); -->
+<!--     }; -->
+<!-- })(); -->
+<!-- </script> -->
+
+<!-- <!-1- Critical CSS: Essential for initial layout and basic content visibility -1-> -->
+<!-- NOTE: This file should be kept minimal and most code that needs to be loaded sequentially should be async instead. -->
+
+<!-- Article -->
+<!-- Prevent the mobile navbar from appearing for a split second when loading the page (even on PCs) -->
+
+<style>
+  .nav-drawer {
+    transform: translateX(100%);
+  }
+</style>
+
+
+<!-- <!-1- Async CSS: High priority UI components and global utilities -1-> -->
+
+
+<link rel="preload" href="/assets/styles/async-bundle.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="/assets/styles/async-bundle.css"></noscript>
+
+
+<!-- Defer CSS: Non-critical, interactive, or below-the-fold styles -->
+
+
+<link
+  rel="stylesheet"
+  href="/assets/styles/deferred-bundle.css"
+  
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href="/assets/styles/deferred-bundle.css"
+    >
+</noscript>
+
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp/">
+<meta property="og:title" content="Template Specialization & Concepts in C++">
+<meta property="og:description" content="New C++23 feature known as concepts presents new compile-time opportunities">
+<meta property="og:image" content="https://www.quarterstar.tech">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:title" content="Template Specialization & Concepts in C++">
+
+
+
+
+<link
+  rel="stylesheet"
+  href=""
+  id="hljs-theme"
+  media="print"
+  onload="this.media='all'">
+
+<noscript>
+  <link
+    rel="stylesheet"
+    href=""
+    id="hljs-theme-fallback">
+</noscript>
+
+
+<script>
+  (function() {
+    try {
+      const darkClass = 'dark-mode';
+      const stored = localStorage.getItem('site-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if(stored === 'dark' || (!stored && prefersDark)) {
+        document.documentElement.classList.add(darkClass);
+      }
+    } catch(e) {}
+  })();
+</script>
+
+
+<!-- TODO (MOVE) -->
+<script>
+  function ml_webform_success_32409238() {
+    var $ = ml_jQuery || jQuery;
+    $('.ml-subscribe-form-32409238 .row-success').show();
+    $('.ml-subscribe-form-32409238 .row-form').hide();
+  }
+</script>
+<!-- <script src="https://groot.mailerlite.com/js/w/webforms.min.js?v176e10baa5e7ed80d35ae235be3d5024" type="text/javascript" defer></script> -->
+<script src="/assets/external-scripts/mailerlite-webform.js" type="text/javascript" defer></script>
+
+
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Template Specialization & Concepts in C++",
+  "datePublished": "2025-11-21T00:00:00+01:00",
+  "author": [{
+      "@type": "Person",
+      "name": "Quarterstar",
+      "url": "https://github.com/quarterstar"
+    }]
+}
+</script>
+
+  </head>
+  <body data-barba="wrapper">
+    <header class="header">
+  <nav id="desktop-nav" class="desktop-nav">
+    <div class="brand-btns">
+      <div id="brand">
+        <a href="https://github.com/quarterstar" class="logo" aria-label="Visit my GitHub profile">
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quarterstar Logo Animation</title>
+  <style>
+    #quarterstar {
+      width: 256px;
+      height: 256px;
+      border-radius: 10px;
+    }
+
+    #q-rotations > * {
+      transition: opacity 200ms linear;
+    }
+    #q-rotations .hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <svg id="quarterstar" viewBox="0 0 256 256" width="256px" height="256px" xmlns="http://www.w3.org/2000/svg">
+    <style>
+      #q-rotations > * {
+        transition: opacity 200ms linear;
+      }
+
+      #orig-q, #q-rotations text {
+        /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;*/
+        font-family: "Noto Sans Regular";
+      }
+
+      #q-rotations .hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #q-rotations text {
+        font-family: "Noto Sans Regular";
+      }
+    </style>
+
+    <g id="layer1">
+      <circle style="fill:#515151;stroke-width:5.06729;fill-opacity:1" cx="128" cy="128" r="128" />
+      
+      <!-- Rotated Q copies -->
+      <g id="q-rotations">
+        <text transform="rotate(-15 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+        <text transform="rotate(-30 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-45 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-60 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-75 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-90 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-105 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-120 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-135 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-150 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-165 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-180 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2;">Q</text>
+        <text transform="rotate(-195 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2136;">Q</text>
+        <text transform="rotate(-210 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.2536;">Q</text>
+        <text transform="rotate(-225 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.3172;">Q</text>
+        <text transform="rotate(-240 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4;">Q</text>
+        <text transform="rotate(-255 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.4965;">Q</text>
+        <text transform="rotate(-270 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.6;">Q</text>
+        <text transform="rotate(-285 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.7035;">Q</text>
+        <text transform="rotate(-300 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8;">Q</text>
+        <text transform="rotate(-315 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.8828;">Q</text>
+        <text transform="rotate(-330 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9464;">Q</text>
+        <text transform="rotate(-345 128 128)" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:0.9864;">Q</text>
+      </g>
+
+      <!-- Original top Q (fully visible) -->
+      <text id="orig-q" x="50.338547" y="192.31421" style="font-size:175.941px;fill:#999999;fill-opacity:1;">Q</text>
+    </g>
+
+    <g id="center-asterisk-group" transform="translate(128 128)">
+  <text id="center-asterisk"
+        x="0" y="0"
+        text-anchor="middle"
+        dominant-baseline="central"
+        style="font-size:28px;fill:#ffffff;pointer-events:none;">
+    *
+  </text>
+</g>
+  </svg>
+</body>
+</html>
+
+        </a>
+        <div id="brand-info">
+          <p class="brand-name">Q*</p>
+          <p class="brand-desc">Defending offensively.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pc-buttons">
+      <button id="theme-toggle-pc"
+        role="switch"
+        aria-label="Toggle dark mode"
+        aria-checked="false"
+        title="Toggle dark mode">
+  <span class="track" aria-hidden="true">
+    <span class="knob" aria-hidden="true"></span>
+  </span>
+
+  <!-- visual text (kept simple and flex-based) -->
+  <span class="labels" aria-hidden="true">
+    <span class="label label-off">Off</span>
+    <span class="label label-on">On</span>
+  </span>
+</button>
+
+      <ul class="nav-links">
+        <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+      </ul>
+    </div>
+    <div class="mobile-buttons">
+      <button id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle dark mode">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6.5c0-.83.67-1.5 1.5-1.5h3c.83 0 1.5.67 1.5 1.5v.8H9v-.8z"
+          fill="var(--toggle-lamp-base)"/>
+    <circle class="bulb" cx="12" cy="11" r="3" fill="var(--toggle-lamp-bulb)"/>
+    <rect x="11" y="14" width="2" height="3" fill="var(--toggle-lamp-base)"/>
+    <rect x="8" y="18" width="8" height="1.2" rx="0.6" fill="var(--toggle-lamp-base)"/>
+  </svg>
+</button>
+
+      <button class="menu-btn" id="menuBtn" aria-controls="navDrawer" aria-expanded="false" aria-label="Open navigation">
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="bar" aria-hidden="true"></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="overlay" id="overlay" tabindex="-1" aria-hidden="true"></div>
+
+<nav id="navDrawer" class="nav-drawer" aria-hidden="true" inert>
+  <!-- <button class="drawer-close" id="drawerClose" aria-label="Close navigation">✕</button> -->
+  <button class="drawer-close" id="drawerClose" aria-label="Close navigation">
+    <span aria-hidden="true">✕</span>
+  </button>
+  <h2 style="margin:6px 0 18px;">Menu</h2>
+  <ul>
+    <!-- <span class="nav-active"></span> -->
+
+
+  <li><a href="/pages/index">Main</a></li>
+
+  <li><a href="/pages/articles">Articles</a></li>
+
+  <li><a href="/pages/donate">Donate</a></li>
+
+  <li><a href="/pages/legal">Legal</a></li>
+
+
+  </ul>
+</nav>
+
+    
+    <div id="canvas-holder" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 99;"></div>
+
+    <div id="main-content" data-barba="container" data-barba-namespace="article">
+      <div class="reading-progress" aria-hidden="false">
+  <div id="reading-progress-bar"
+       class="reading-progress__bar"
+       role="progressbar"
+       aria-valuemin="0"
+       aria-valuemax="100"
+       aria-valuenow="0"
+       aria-label="Reading progress">
+  </div>
+</div>
+
+
+
+      <template id="sidebar-left-template">
+        <aside id="sidebar-left">
+        </aside>
+      </template>
+      <div id="sidebar-left-container"></div>
+
+      <main>
+        <div class="article-header">
+          <h1 class="article-title">Template Specialization & Concepts in C++</h1>
+          <span class="post-date">November 21, 2025</span>
+          <br>
+          <span>Written by Quarterstar</span>
+          <br>
+          
+
+12 minutes to read
+
+
+          <br>
+
+          <p id="tip-of-day" class="tip-of-day">Loading tip...</p>
+        </div>
+
+        
+
+<aside class="recommended-articles">
+<strong>You may also like</strong>
+<ul>
+  
+    <li>
+      <a href="/articles/understanding-the-nix-store-by-hunting-packages-down">Understanding the Nix Store by Hunting Packages Down</a>
+      <small class="muted">(Oct 26, 2025)</small>
+    </li>
+  
+</ul>
+</aside>
+
+
+
+        
+        
+          <nav id="table-of-contents" aria-label="Table of Contents">
+            <h2>Table of Contents</h2>
+            <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h2"><a href="#template-specialization">Template Specialization</a></li>
+<li class="toc-entry toc-h2"><a href="#concepts">Concepts</a></li>
+</ul>
+          </nav>
+        
+
+        <article id="reveal-content">
+          <p>If you come from Rust, you might miss the value of traits. Thankfully, C++ has something very similar to them. Suppose you are creating your own vector type (for the thousandth time). You probably do something like:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Vector3</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Vector3</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">w</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<h2 id="template-specialization">Template Specialization</h2>
+
+<p>C++ has a feature called template specialization that allows you to specify behavior for particular instances of the template:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Foo</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="kt">void</span> <span class="n">display</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">"General template"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">Foo</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">static</span> <span class="kt">void</span> <span class="n">display</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">println</span><span class="p">(</span><span class="s">"Specialized for int"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The C++ compiler knows that you are specifying a specialization when you use empty <code class="language-plaintext highlighter-rouge">&lt;&gt;</code>. If you want to be really fancy, you might use it for your vector class like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector2</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">Base</span><span class="p">;</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector3</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector3</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector4</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">w</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector4</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+</code></pre></div></div>
+
+<p>Since inheritance (which is a runtime mechanism) and templates (which are a compile-time mechanism) don’t go well together, we have applied CRTP. But a problem still remains: how do we ensure that the user of our user supplies correct types? In our case, the ones that make sense are integers and floats.</p>
+
+<p>This is where concepts come in. For the basic types like <code class="language-plaintext highlighter-rouge">int</code>, <code class="language-plaintext highlighter-rouge">unsigned int</code>, and so on, the C++ standard groups them under one general name called <em>integral types</em>.</p>
+
+<h2 id="concepts">Concepts</h2>
+
+<p>The exact implementation of the things that we will discuss ultimately depend on the C++ implementation by the compiler, but we will use some basic patterns that are common across all of them. Conceptually, <code class="language-plaintext highlighter-rouge">std::is_integral</code>, which is a utility for determining whether a type is one of the integrals, is defined like so:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">false_type</span> <span class="p">{</span> <span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="p">&gt;</span>
+<span class="k">struct</span> <span class="nc">is_integral</span><span class="o">&lt;</span><span class="kt">signed</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="o">:</span> <span class="n">std</span><span class="o">::</span><span class="n">true_type</span> <span class="p">{</span> <span class="p">};</span>
+</code></pre></div></div>
+
+<p>Here, <code class="language-plaintext highlighter-rouge">std::false_type</code> is what is known as a <em>type trait</em>. Type traits are compile-time tools that allow you to ask questions about a particular type. Most type traits are implemented with a static boolean member <code class="language-plaintext highlighter-rouge">value</code>, which is precisely what <code class="language-plaintext highlighter-rouge">std::false_type</code> does:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="nc">false_type</span> <span class="p">{</span>
+    <span class="k">static</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">type</span> <span class="o">=</span> <span class="n">false_type</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>You can probably guess the implementation of <code class="language-plaintext highlighter-rouge">std::true_type</code> based on this as well. The idea is that if we make specializations inherit <code class="language-plaintext highlighter-rouge">std::true_type</code> instead, the base <code class="language-plaintext highlighter-rouge">value</code> becomes true, which allows the compiler to do some type checking we will see just in a second.</p>
+
+<p>Any type that inherits from a type trait is also a type trait. Consequently, <code class="language-plaintext highlighter-rouge">std::is_integral</code> is a type trait.</p>
+
+<p>The value of a type trait is often abbreviated with <code class="language-plaintext highlighter-rouge">_v</code> prefixes in the standard library:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="k">constexpr</span> <span class="kt">bool</span> <span class="n">is_integral_v</span> <span class="o">=</span> <span class="n">is_integral</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Now, where do concepts come in play? Concepts allow constraining template parameters with semantic rules defined by type traits. That means if we define:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="k">concept</span> <span class="n">integral</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">is_integral_v</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>And use the concept in place of our <code class="language-plaintext highlighter-rouge">typename</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<p>The compiler, fundamanentally speaking, will evaluate the boolean condition at compile-time. If it is false, you will get a compilation error. We can make the rest of our vector implementation use this concept:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Derived</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">IVector</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">x</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">y</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">IVector</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Derived</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Derived</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">Derived</span><span class="p">{</span><span class="n">self</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">y</span><span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector2</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector2</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">Base</span><span class="o">::</span><span class="n">Base</span><span class="p">;</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector3</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector3</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector3</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector3</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">z</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+
+<span class="k">template</span> <span class="o">&lt;</span><span class="n">int_or_float</span> <span class="n">T</span><span class="p">&gt;</span> <span class="k">struct</span> <span class="nc">Vector4</span> <span class="o">:</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span> <span class="p">{</span>
+  <span class="n">T</span> <span class="n">z</span><span class="p">{};</span>
+  <span class="n">T</span> <span class="n">w</span><span class="p">{};</span>
+
+  <span class="k">auto</span> <span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="k">this</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">self</span><span class="p">,</span> <span class="k">const</span> <span class="n">Vector4</span> <span class="o">&amp;</span><span class="n">other</span><span class="p">)</span> <span class="k">noexcept</span>
+      <span class="o">-&gt;</span> <span class="n">Vector4</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">IVector</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Vector4</span><span class="o">&gt;::</span><span class="k">operator</span><span class="o">+</span><span class="p">(</span><span class="n">other</span><span class="p">);</span>
+    <span class="n">result</span><span class="p">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">w</span> <span class="o">+</span> <span class="n">other</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">};</span> <span class="c1">// AGGREGATE</span>
+</code></pre></div></div>
+
+<p>You will now notice that, in the following code:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdfloat&gt;</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">"vector.hpp"</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// this is OK</span>
+  <span class="k">auto</span> <span class="n">a</span><span class="p">{</span><span class="n">Vector4</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">float32_t</span><span class="o">&gt;</span><span class="p">{</span><span class="mf">0.5f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">0.5f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">1.0f</span><span class="mi">32</span><span class="p">,</span> <span class="mf">1.0f</span><span class="mi">32</span><span class="p">}};</span>
+
+  <span class="c1">// this fails to compile because the constraints are not satisfied</span>
+  <span class="k">auto</span> <span class="n">b</span><span class="p">{</span><span class="n">Vector4</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">{</span><span class="s">"A"</span><span class="p">,</span> <span class="s">"B"</span><span class="p">,</span> <span class="s">"B"</span><span class="p">,</span> <span class="s">"C"</span><span class="p">}};</span>
+  
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>So concepts let us have these compile-time guarantees that were impossible before C++20.</p>
+
+<p>Now that you understand how they work and how to use them, enjoy applying them to your codebase (if you don’t have a 32 year old monolith stuck in C++11). Below is a small list of them.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">std::copyable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is copy-constructible and copy-assignable.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::movable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is move-constructible and move-assignable.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::equality_comparable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> supports <code class="language-plaintext highlighter-rouge">==</code> and <code class="language-plaintext highlighter-rouge">!=</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::totally_ordered&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> Supports <code class="language-plaintext highlighter-rouge">&lt;</code>, <code class="language-plaintext highlighter-rouge">&lt;=</code>, <code class="language-plaintext highlighter-rouge">&gt;</code>, <code class="language-plaintext highlighter-rouge">&gt;=</code>, <code class="language-plaintext highlighter-rouge">==</code>, and <code class="language-plaintext highlighter-rouge">!=</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::default_initializable&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be default-constructed (T t{} or T t;).</li>
+  <li><code class="language-plaintext highlighter-rouge">std::destructible&lt;T&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be destroyed with a destructor.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::assignable_from&lt;T, U&gt;</code>: Can assign a value of type <code class="language-plaintext highlighter-rouge">U</code> to a variable of type <code class="language-plaintext highlighter-rouge">T</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::same_as&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> and <code class="language-plaintext highlighter-rouge">U</code> are exactly the same type.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::derived_from&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> is derived from <code class="language-plaintext highlighter-rouge">U</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">std::convertible_to&lt;T, U&gt;</code>: <code class="language-plaintext highlighter-rouge">T</code> can be implicitly converted to <code class="language-plaintext highlighter-rouge">U</code>.</li>
+</ul>
+
+        </article>
+        
+        <div class="separator"></div>
+
+        <section id="newsletter-section">
+          <h2>Enjoyed reading? Subscribe to my newsletter.</h2>
+          <div id="newsletter-container">
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+        </section>
+
+        
+
+
+<div class="author-bio separator">
+  <div class="author-credentials">
+    <img src="/assets/images/icons/quarterstar.svg" alt="Quarterstar" class="author-avatar">
+    <p class="shout">Quarterstar</p>
+  </div>
+  <div class="author-info">
+    <p>Machine learning researcher with special interests in 3D graphics, privacy enhancement, low-level programming, and mathematics.</p>
+  </div>
+  <div class="author-links">
+    
+      <a href="https://github.com/quarterstar"><img src="/assets/images/icons/github-mark.svg" alt="GitHub"></img></a>
+    
+    
+      <a href="https://github.com/quarterstar_"><img src="/assets/images/icons/Reddit_Icon_2Color.svg" alt="Reddit"></img></a>
+    
+    
+      <a href="https://discord.gg/vcfmKdceXF"><img src="/assets/images/icons/Discord-Symbol-Blurple.svg" alt="Discord"></img></a>
+    
+  </div>
+</div>
+
+
+        <div id="comment-section-container">
+        </div>
+      </main>
+
+      <template id="sidebar-right-template">
+        <aside id="sidebar-right">
+          <section id="inline-newsletter-section">
+  <h2>SUBSCRIBE TO NEWSLETTER</h2>
+
+  <div id="newsletter-container">
+  <div id="mlb2-32409238" class="ml-form-embedContainer ml-subscribe-form ml-subscribe-form-32409238">
+    <div class="ml-form-align-center ">
+      <div class="ml-form-embedWrapper embedForm">
+
+        <div id="newsletter" class="ml-form-embedBody ml-form-embedBodyDefault row-form">
+
+          <div class="ml-form-embedContent">
+          </div>
+
+          <form class="ml-block-form" id="subscribe-form" action="https://assets.mailerlite.com/jsonp/1873801/forms/168987398352405792/subscribe" method="post" data-code="" target="_blank">
+            <input type="email" name="fields[email]" id="email" required>
+            <input type="hidden" name="ml-submit" value="1">
+
+            <div class="ml-form-embedSubmit">
+              <button class="fancy-btn magic-glow primary" type="submit">Subscribe</button>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="ml-form-successBody row-success" style="display: none; text-align: center">
+          <div class="ml-form-successContent">
+            <strong style="font-family: DejaVu Sans">Thank you!</strong>
+            <p>Please verify your email address with the link we have sent you.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</section>
+
+          <h2>RELATED ARTICLES BY TAG</h2>
+
+<section>
+  <ul id="matching-articles">
+  
+    <li>
+      <section>
+        <h3>CPP</h3>
+        <ul>
+          
+            
+              
+                
+                  <li>
+                    <a href="/articles/rust-to-cpp-implementing-the-question-mark-operator">Rust to C++: Implementing The Question Mark Operator</a>
+                    <small class="muted">(Mar 30, 2026)</small>
+                  </li>
+                
+              
+                
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+              
+                
+              
+                
+              
+            
+          
+        </ul>
+      </section>
+    </li>
+  
+    <li>
+      <section>
+        <h3>PROGRAMMING</h3>
+        <ul>
+          
+            
+              
+                
+              
+                
+                  <li>
+                    <a href="/articles/rust-to-cpp-implementing-the-question-mark-operator">Rust to C++: Implementing The Question Mark Operator</a>
+                    <small class="muted">(Mar 30, 2026)</small>
+                  </li>
+                
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+              
+                
+              
+                
+                  <li>
+                    <a href="/articles/understanding-the-nix-store-by-hunting-packages-down">Understanding the Nix Store by Hunting Packages Down</a>
+                    <small class="muted">(Oct 26, 2025)</small>
+                  </li>
+                
+              
+            
+          
+        </ul>
+      </section>
+    </li>
+  
+  </ul>
+</section>
+
+          <section>
+  <h2>RANDOM FRACTAL</h2>
+  <img width="50%" height="50%" src="/assets/images/graphics/fractals.png" loading="lazy">
+</section>
+
+        </aside>
+      </template>
+      <div id="sidebar-right-container"></div>
+    </div>
+
+    <footer>
+      <p>&copy; 1970–2026 Quarterstar, All Rights Reserved.</p>
+
+    </footer>
+
+    <script type="module" src="/assets/scripts/bundle.js"></script>
+
+  </body>
+</html>
