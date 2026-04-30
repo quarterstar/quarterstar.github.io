@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Quarterstar</title>
+    <link>https://www.quarterstar.tech</link>
+    <atom:link href="https://www.quarterstar.tech/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Discover modern software solutions. Enhance your privacy online. Find ethical AI projects. Find what Quarterstar is working on. Read blogs and articles on research.</description>
+    <copyright>Copyright 2026, Quarterstar™</copyright>
+    <managingEditor></managingEditor>
+    <webMaster></webMaster>
+    <pubDate>Mon, 30 Mar 2026 00:00:00 +0200</pubDate>
+    <lastBuildDate>Thu, 30 Apr 2026 22:46:11 +0200</lastBuildDate>
+    <generator>Jekyll</generator>
+    <docs>https://www.rssboard.org/rss-specification</docs>
+    <ttl>60</ttl>
+
+    
+
+    
+    
+    
+    <item>
+      <title>Rust to C++: Implementing the Question Mark Operator</title>
+      <link>https://www.quarterstar.tech/articles/rust-to-cpp-implementing-the-question-mark-operator/</link>
+      <description>C++ may not be Rust, but perhaps we can learn a thing or two from how it does certain things?</description>
+      <author>quarterstar@proton.me</author>
+      <guid isPermaLink="true">2026-03-30-rust-to-cpp-implementing-the-question-mark-operator</guid>
+      <pubDate>Mon, 30 Mar 2026 00:00:00 +0200</pubDate>
+    </item>
+    
+    
+    
+    <item>
+      <title>The Essence Of Mathematics From Basic Counting To Fourier Transforms And Beyond</title>
+      <link>https://www.quarterstar.tech/articles/the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond/</link>
+      <description>&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+</description>
+      <author>quarterstar@proton.me</author>
+      <guid isPermaLink="true">2025-12-22-the-essence-of-mathematics-from-basic-counting-to-fourier-transforms-and-beyond</guid>
+      <pubDate>Mon, 22 Dec 2025 00:00:00 +0100</pubDate>
+    </item>
+    
+    
+    
+    <item>
+      <title>Template Specialization &amp; Concepts in C++</title>
+      <link>https://www.quarterstar.tech/articles/template-specialization-and-concepts-in-cpp/</link>
+      <description>New C++23 feature known as concepts presents new compile-time opportunities</description>
+      <author>quarterstar@proton.me</author>
+      <guid isPermaLink="true">2025-11-21-template-specialization-and-concepts-in-cpp</guid>
+      <pubDate>Fri, 21 Nov 2025 00:00:00 +0100</pubDate>
+    </item>
+    
+    
+    
+    <item>
+      <title>Understanding the Nix Store by Hunting Packages Down</title>
+      <link>https://www.quarterstar.tech/articles/understanding-the-nix-store-by-hunting-packages-down/</link>
+      <description>Learn how to operate on the Nix Store commands like a professional user. See how the commands relate to its functionality.</description>
+      <author>quarterstar@proton.me</author>
+      <guid isPermaLink="true">2025-10-26-understanding-the-nix-store-by-hunting-packages-down</guid>
+      <pubDate>Sun, 26 Oct 2025 00:00:00 +0200</pubDate>
+    </item>
+    
+  </channel>
+</rss>
