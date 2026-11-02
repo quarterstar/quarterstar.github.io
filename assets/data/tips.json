@@ -1,0 +1,12 @@
+[
+  "Use long-term PGP for identity and short-lived keys for automation. Consider using subkeys for day-to-day signing/encryption.",
+  "Strip metadata (EXIF, GPS) before sharing photos and documents; many tools can remove this automatically. Use tools like mat2.",
+  "Use network namespaces for privacy testing.",
+  "Use an FIM (File Integrity Monitoring) tool like tripwire, AIDE, or a lightweight inotify script to detect unexpected changes.",
+  "Enable TPM/secure boot and use Full Disk Encryption (LUKS) with a secure keyslot; bind critical credentials to TPM when supported.",
+  "Run a small command in an isolated mount and PID namespace for testing without containers.",
+  "Make critical config files immutable so they can't be altered by accidental writes.",
+  "Attach lightweight XDP/eBPF programs to do packet filtering, rate-limiting, or observability at kernel level with minimal latency.",
+  "Establish a workflow that builds critical components twice (or in two independent environments) and compares outputs with diffoscope to ensure byte-for-byte reproducibility.",
+  "Combine kernel auditing (auditd) rules for critical paths with osquery for high-level telemetry and automated investigation playbooks. Ship signed alerts to a SIEM for correlation."
+]

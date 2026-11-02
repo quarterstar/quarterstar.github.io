@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200" role="img" aria-label="City silhouette pattern">
+  <rect x="0" y="150" width="800" height="50" fill="transparent"/>
+
+  <g fill="#1a1a1a" opacity="0.45">
+    <rect x="20"  y="110" width="40"  height="40"/>
+    <rect x="120" y="90"  width="40"  height="60"/>
+    <rect x="220" y="70"  width="40"  height="80"/>
+    <rect x="340" y="100" width="50"  height="50"/>
+    <rect x="460" y="85"  width="30"  height="65"/>
+    <rect x="520" y="60"  width="40"  height="90"/>
+    <rect x="640" y="95"  width="40"  height="55"/>
+  </g>
+
+  <g fill="#0b0b0b">
+    <rect x="0"   y="80"  width="60"  height="70"/>
+    <rect x="60"  y="120" width="30"  height="30"/>
+    <rect x="90"  y="60"  width="50"  height="90"/>
+    <rect x="140" y="100" width="40"  height="50"/>
+    <rect x="180" y="30"  width="80"  height="120"/>
+    <rect x="260" y="90"  width="60"  height="60"/>
+    <rect x="320" y="110" width="40"  height="40"/>
+    <rect x="360" y="50"  width="90"  height="100"/>
+    <rect x="450" y="80"  width="50"  height="70"/>
+    <rect x="500" y="40"  width="60"  height="110"/>
+    <rect x="560" y="90"  width="40"  height="60"/>
+    <rect x="600" y="70"  width="80"  height="80"/>
+    <rect x="680" y="50"  width="120" height="100"/>
+  </g>
+</svg>
+
